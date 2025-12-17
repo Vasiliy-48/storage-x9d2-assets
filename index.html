@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Вайб Кодер: Эпизод 404</title>
     <style>
-        /* --- 1. ОСНОВНЫЕ СТИЛИ И КОСМОС --- */
+        /* --- 1. БАЗА И КОСМОС --- */
         body {
             margin: 0;
             padding: 0;
@@ -15,7 +15,7 @@
             font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
             height: 100vh;
             width: 100vw;
-            /* Звезды на фоне */
+            /* Звезды */
             background-image: 
                 radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
                 radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
@@ -24,162 +24,213 @@
             background-position: 0 0, 40px 60px, 130px 270px;
         }
 
-        /* --- 2. КОНТЕЙНЕРЫ КОНТЕНТА --- */
-        #main-container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            position: relative;
-            z-index: 10; /* Контент выше фона, но ниже эффектов, если нужно */
-        }
-
-        #canvas-container {
-            width: 50%;
-            height: 100%;
-            position: relative;
-            z-index: 20; /* 3D фото должно быть кликабельным */
-        }
+        /* --- 2. LAYOUT --- */
+        #main-container { display: flex; width: 100%; height: 100%; position: relative; z-index: 10; }
+        #canvas-container { width: 50%; height: 100%; position: relative; z-index: 20; }
         canvas { display: block; outline: none; }
+        #text-container { width: 50%; height: 100%; overflow: hidden; position: relative; z-index: 10; }
 
-        #text-container {
-            width: 50%;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-            z-index: 10;
-        }
-
-        /* --- 3. ГЛОБАЛЬНАЯ СЦЕНА БИТВЫ (НА ВЕСЬ ЭКРАН) --- */
+        /* --- 3. СЦЕНА БИТВЫ (ВЕСЬ ЭКРАН) --- */
         #global-battle-scene {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none; /* Чтобы можно было кликать сквозь корабли */
-            z-index: 5; /* Летают ПОД текстом и ПОД 3D фото (или над, если поменять на 30) */
-            /* Если хочешь, чтобы они летали ПОВЕРХ всего, поставь z-index: 100 */
-            z-index: 15; 
-            overflow: hidden;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            pointer-events: none; z-index: 30; overflow: hidden;
         }
 
-        /* Общие стили для летающих групп */
-        .ship-group {
+        .ship-wrapper {
             position: absolute;
             display: flex;
             align-items: center;
-            /* filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); */
+            justify-content: center;
         }
 
-        .ship-img {
-            width: 180px; /* Размер кораблей - побольше */
-            height: auto;
-            display: block;
+        /* =========================================
+           РИСУЕМ МОДЕЛИ НА CSS
+           ========================================= */
+
+        /* --- TIE FIGHTER --- */
+        .css-tie {
+            width: 40px; height: 40px;
+            position: relative;
+        }
+        .tie-cockpit {
+            width: 30px; height: 30px;
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+            border-radius: 50%;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid #222; z-index: 2;
+        }
+        .tie-wing {
+            position: absolute; top: -10px;
+            width: 8px; height: 60px;
+            background: #111; border: 1px solid #444; border-radius: 2px;
+        }
+        .tie-wing.left { left: -10px; }
+        .tie-wing.right { right: -10px; }
+        .tie-strut {
+            position: absolute; top: 50%;
+            width: 60px; height: 4px;
+            background: #333; left: -10px; transform: translateY(-50%); z-index: 1;
         }
 
-        /* Лазеры */
+        /* --- X-WING --- */
+        .css-xwing {
+            width: 80px; height: 30px;
+            position: relative;
+            transform: rotate(5deg);
+        }
+        .x-body {
+            width: 80px; height: 10px;
+            background: linear-gradient(to right, #ddd, #999);
+            border-radius: 0 50% 50% 0; /* Острый нос */
+            position: absolute; top: 10px; left: 0; z-index: 2;
+        }
+        .x-body::after {
+            content: ''; position: absolute; top: 3px; left: 10px;
+            width: 40px; height: 4px; background: #cc0000;
+        }
+        .x-wings {
+            position: absolute; top: 5px; left: 10px;
+            width: 40px; height: 20px;
+        }
+        .wing-pair {
+            position: absolute; width: 40px; height: 4px; background: #ccc;
+        }
+        .wing-top { transform: rotate(-15deg); top: 0; }
+        .wing-bottom { transform: rotate(15deg); top: 15px; }
+        .engine {
+            position: absolute; width: 10px; height: 6px; background: #555;
+            left: 0; border-radius: 2px;
+        }
+        .wing-top .engine { top: -1px; }
+        .wing-bottom .engine { top: -1px; }
+
+
+        /* --- МАГ (КОЛДУН) --- */
+        .css-wizard {
+            width: 60px; height: 40px;
+            position: relative;
+            /* !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ: ОТЗЕРКАЛИВАЕМ ЕГО ПО ГОРИЗОНТАЛИ !!! */
+            transform: scaleX(-1); 
+        }
+        .broom {
+            width: 60px; height: 4px;
+            background: #8B4513; position: absolute; bottom: 10px; left: 0;
+            border-radius: 2px; transform: rotate(-5deg);
+        }
+        .broom::before {
+            content: ''; position: absolute; left: -10px; top: -3px;
+            width: 15px; height: 10px; background: #DAA520;
+            border-radius: 50% 0 0 50%;
+        }
+        .robe {
+            width: 0; height: 0;
+            border-left: 20px solid transparent; border-right: 10px solid transparent;
+            border-bottom: 30px solid #111;
+            position: absolute; bottom: 12px; left: 15px;
+            transform: rotate(-15deg);
+        }
+        .head {
+            width: 12px; height: 12px; background: #ffcc99;
+            border-radius: 50%; position: absolute; top: -5px; left: 30px;
+        }
+        .hat {
+            width: 0; height: 0;
+            border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-bottom: 20px solid #222;
+            position: absolute; top: -18px; left: 26px;
+            transform: rotate(-10deg);
+        }
+        .cape {
+            position: absolute; left: 5px; top: 10px;
+            width: 30px; height: 15px; background: #333;
+            clip-path: polygon(100% 0, 0 50%, 100% 100%);
+            animation: capeWave 0.5s infinite alternate;
+        }
+        @keyframes capeWave { from { transform: scaleX(1); } to { transform: scaleX(0.8); } }
+
+
+        /* =========================================
+           АНИМАЦИИ И ЭФФЕКТЫ
+           ========================================= */
+        
         .laser {
-            position: absolute;
-            width: 0; /* Изначально скрыт */
-            height: 4px;
-            border-radius: 2px;
-            opacity: 0;
+            position: absolute; height: 4px; border-radius: 4px; opacity: 0; z-index: 1;
         }
 
-        /* --- 4. АНИМАЦИИ КОРАБЛЕЙ И МАГОВ --- */
-
-        /* === X-WING (Повстанцы) === */
+        /* X-Wing Move */
         .x-wing-wrapper {
-            top: 20%;
-            left: -300px;
-            animation: flyAcrossRight 12s linear infinite;
+            top: 15%; left: -200px;
+            animation: flyAcrossRight 14s linear infinite;
         }
         .x-wing-wrapper .laser {
-            background: #ff0000;
-            box-shadow: 0 0 15px #ff0000;
-            top: 50%; /* Из центра */
-            left: 50%;
-            animation: fireLaserRight 12s linear infinite;
+            background: #ff3333; box-shadow: 0 0 10px #ff0000;
+            top: 50%; left: 80%;
+            animation: fireLaserRight 14s linear infinite;
         }
 
-        /* === TIE FIGHTER (Империя) - Гонится за X-Wing === */
+        /* TIE Fighter Move */
         .tie-wrapper {
-            top: 25%; /* Чуть ниже X-Wing */
-            left: -600px; /* Летит с задержкой */
-            animation: flyAcrossRight 12s linear infinite;
-            animation-delay: 0.5s; 
+            top: 20%; left: -400px;
+            animation: flyAcrossRight 14s linear infinite;
+            animation-delay: 0.5s;
         }
         .tie-wrapper .laser {
-            background: #00ff00; /* Зеленый лазер */
-            box-shadow: 0 0 15px #00ff00;
-            top: 45%;
-            left: 50%;
-            animation: fireLaserRight 12s linear infinite;
-            animation-delay: 0.8s;
+            background: #33ff33; box-shadow: 0 0 10px #00ff00;
+            top: 50%; left: 50%;
+            animation: fireLaserRight 14s linear infinite;
+            animation-delay: 1.0s;
         }
 
-        /* === ГАРРИ ПОТТЕР (Летит хаотично) === */
+        /* Wizard Move */
         .wizard-wrapper {
-            top: 80%;
-            right: -300px; /* Летит справа налево */
-            animation: flyWizardComplex 18s linear infinite;
+            top: 60%; right: -200px;
+            /* Летит справа налево */
+            animation: flyWizardChaotic 20s linear infinite;
+            z-index: 35;
         }
-        .wizard-wrapper .ship-img {
-            width: 220px; /* Гарри покрупнее */
-        }
-        /* Заклинание (Луч) */
         .spell-bolt {
-            position: absolute;
-            top: 30px;
-            left: 20px; /* Из палочки (примерно) */
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #fff;
-            box-shadow: 0 0 20px #00ffff, 0 0 40px #0000ff;
+            /* Переместили заклинание к "носу" развернутого мага */
+            position: absolute; top: 10px; left: 5px; 
+            width: 10px; height: 10px; background: #fff;
+            border-radius: 50%; box-shadow: 0 0 15px cyan, 0 0 30px violet;
             opacity: 0;
-            animation: castSpell 18s linear infinite;
+            animation: castSpell 20s linear infinite;
         }
 
-        /* === КЛЮЧЕВЫЕ КАДРЫ ДВИЖЕНИЯ === */
-
-        /* Полет слева направо */
+        /* KEYFRAMES */
         @keyframes flyAcrossRight {
-            0% { transform: translateX(0) translateY(0) rotate(5deg); }
-            20% { transform: translateX(25vw) translateY(50px) rotate(10deg); }
-            50% { transform: translateX(60vw) translateY(-50px) rotate(0deg); }
-            100% { transform: translateX(120vw) translateY(0) rotate(5deg); }
+            0% { transform: translate(0, 0) scale(0.6); }
+            50% { transform: translate(60vw, -30px) scale(0.8); }
+            100% { transform: translate(120vw, 20px) scale(0.6); }
         }
 
-        /* Стрельба вправо */
         @keyframes fireLaserRight {
-            0% { width: 0; opacity: 0; transform: translateX(0); }
-            15% { width: 100px; opacity: 1; } /* Лазер появляется */
-            25% { width: 100px; opacity: 1; transform: translateX(600px); } /* Улетает вперед */
-            30% { width: 0; opacity: 0; transform: translateX(800px); } /* Исчезает */
-            100% { opacity: 0; }
+            0%, 15% { width: 0; opacity: 0; transform: translateX(0); }
+            20% { width: 100px; opacity: 1; }
+            35% { width: 0; opacity: 0; transform: translateX(800px); }
+            100% { width: 0; opacity: 0; }
         }
 
-        /* Полет мага (сложная траектория) */
-        @keyframes flyWizardComplex {
-            0% { transform: translateX(0) translateY(0) scale(0.8); right: -300px; top: 70%; }
-            25% { transform: translateX(-40vw) translateY(-100px) scale(0.9); }
-            50% { transform: translateX(-60vw) translateY(50px) scale(1); }
-            75% { transform: translateX(-80vw) translateY(-50px) scale(0.9); }
-            100% { transform: translateX(-120vw) translateY(0) scale(0.8); right: 100%; }
+        @keyframes flyWizardChaotic {
+            /* Полет справа налево */
+            0% { right: -200px; top: 80%; transform: rotate(-5deg); }
+            25% { right: 20%; top: 20%; transform: rotate(5deg); }
+            50% { right: 60%; top: 60%; transform: rotate(-5deg); }
+            100% { right: 120%; top: 40%; transform: rotate(0deg); }
         }
 
-        /* Каст заклинания (Вспышка и полет) */
         @keyframes castSpell {
-            0%, 40% { opacity: 0; transform: translate(0,0); }
-            45% { opacity: 1; transform: translate(-20px, 0) scale(1.5); } /* Накопление */
-            50% { opacity: 1; transform: translate(-800px, 100px) scale(0.5); } /* Выстрел влево-вниз */
-            55% { opacity: 0; }
+            0%, 23% { opacity: 0; transform: translate(0,0); }
+            25% { opacity: 1; transform: translate(0, 0) scale(1.5); }
+            /* Стреляем влево-вниз (заклинание летит вперед по ходу движения) */
+            30% { opacity: 1; transform: translate(-800px, 200px); }
+            35% { opacity: 0; }
             100% { opacity: 0; }
         }
 
-        /* --- 5. ТЕКСТ STAR WARS (Правая часть) --- */
-        .star-wars-scene { width: 100%; height: 100%; perspective: 300px; }
+        /* --- TEXT --- */
+        .star-wars-scene { width: 100%; height: 100%; perspective: 350px; }
         .crawl-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             transform-origin: 50% 100%; transform: rotateX(25deg);
@@ -188,69 +239,74 @@
             position: absolute; top: 100%; left: 10%; width: 80%;
             text-align: justify; font-size: 1.8rem; font-weight: bold;
             line-height: 1.5; letter-spacing: 2px;
-            animation: crawl 60s linear infinite;
+            animation: crawl 70s linear infinite;
         }
-        .title h1 { font-size: 3rem; text-transform: uppercase; color: #ffe81f; text-shadow: 0 0 10px #bfaa18; }
-        .title h2 { font-size: 2rem; }
+        .title h1 { font-size: 3rem; text-transform: uppercase; margin: 0; }
+        .title h2 { font-size: 2rem; margin-bottom: 50px; }
         .fade-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 25%;
-            background: linear-gradient(to bottom, #000 0%, transparent 100%); z-index: 5;
+            position: absolute; top: 0; left: 0; width: 100%; height: 20%;
+            background: linear-gradient(to bottom, #000 10%, transparent 100%); z-index: 15;
         }
-
         @keyframes crawl {
             0% { top: 100%; opacity: 1; transform: translateZ(0); }
-            95% { opacity: 1; }
             100% { top: -250%; opacity: 0; transform: translateZ(-1000px); }
         }
 
-        /* --- 6. МОБИЛКА --- */
         @media (max-width: 768px) {
             #main-container { flex-direction: column; }
             #canvas-container, #text-container { width: 100%; height: 50%; }
-            .crawl-content { font-size: 1.1rem; }
-            .ship-img { width: 100px; } /* Уменьшаем корабли на телефоне */
+            .crawl-content { font-size: 1rem; }
         }
     </style>
-
-    <!-- Подключение Three.js -->
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
     </script>
 </head>
 <body>
 
-    <!-- ГЛОБАЛЬНАЯ СЦЕНА БИТВЫ (НА ВЕСЬ ЭКРАН) -->
+    <!-- СЦЕНА -->
     <div id="global-battle-scene">
         
-        <!-- 1. Группа X-WING (Повстанец) -->
-        <div class="ship-group x-wing-wrapper">
-            <!-- Ссылка на реалистичный PNG X-Wing -->
-            <img src="https://www.pngkey.com/png/full/2-24357_x-wing-fighter-png-star-wars-x-wing.png" class="ship-img" alt="X-Wing">
+        <!-- CSS X-WING -->
+        <div class="ship-wrapper x-wing-wrapper">
+            <div class="css-xwing">
+                <div class="x-body"></div>
+                <div class="x-wings">
+                    <div class="wing-pair wing-top"><div class="engine"></div></div>
+                    <div class="wing-pair wing-bottom"><div class="engine"></div></div>
+                </div>
+            </div>
             <div class="laser"></div>
         </div>
 
-        <!-- 2. Группа TIE FIGHTER (Империя) -->
-        <div class="ship-group tie-wrapper">
-            <!-- Ссылка на реалистичный PNG TIE Fighter -->
-            <img src="https://www.pngkey.com/png/full/13-138676_star-wars-tie-fighter-png.png" class="ship-img" alt="TIE Fighter">
+        <!-- CSS TIE FIGHTER -->
+        <div class="ship-wrapper tie-wrapper">
+            <div class="css-tie">
+                <div class="tie-wing left"></div>
+                <div class="tie-strut"></div>
+                <div class="tie-cockpit"></div>
+                <div class="tie-wing right"></div>
+            </div>
             <div class="laser"></div>
         </div>
 
-        <!-- 3. Группа ГАРРИ ПОТТЕР (Маг) -->
-        <div class="ship-group wizard-wrapper">
-            <!-- Ссылка на реалистичного Гарри на метле -->
-            <img src="https://www.pngkey.com/png/full/13-132338_harry-potter-flying-png-harry-potter-on-broom.png" class="ship-img" alt="Harry Potter">
+        <!-- CSS WIZARD -->
+        <div class="ship-wrapper wizard-wrapper">
+            <div class="css-wizard">
+                <div class="broom"></div>
+                <div class="cape"></div>
+                <div class="robe"></div>
+                <div class="head"></div>
+                <div class="hat"></div>
+            </div>
             <div class="spell-bolt"></div>
         </div>
 
     </div>
 
-    <!-- ОСНОВНОЙ КОНТЕЙНЕР С КОНТЕНТОМ -->
+    <!-- КОНТЕНТ -->
     <div id="main-container">
-        <!-- ЛЕВАЯ ЧАСТЬ: 3D ФОТО -->
         <div id="canvas-container"></div>
-
-        <!-- ПРАВАЯ ЧАСТЬ: ТЕКСТ -->
         <div id="text-container">
             <div class="fade-overlay"></div>
             <div class="star-wars-scene">
@@ -285,122 +341,74 @@
         </div>
     </div>
 
-    <!-- СКРИПТ THREE.JS (3D ФОТО) -->
     <script type="module">
         import * as THREE from 'three';
-
         const container = document.getElementById('canvas-container');
-
-        // СЦЕНА
         const scene = new THREE.Scene();
-        scene.background = null; // Прозрачный фон, чтобы видеть звезды
-
-        // КАМЕРА
+        scene.background = null; 
         const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.set(0, 0, 40);
-
-        // РЕНДЕРЕР
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
-
-        // СВЕТ
         const light = new THREE.DirectionalLight(0xffffff, 1.5);
         light.position.set(-5, 10, 10); 
         scene.add(light);
         scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-        // --- ВАЖНО: УКАЖИ СВОЕ ФОТО ЗДЕСЬ ---
         const imageSource = './photo.jpg'; 
-        
         const textureLoader = new THREE.TextureLoader();
         const photoNode = new THREE.Group();
         scene.add(photoNode);
 
         textureLoader.load(imageSource, (texture) => {
             const aspectRatio = texture.image.width / texture.image.height;
-            const h = 18.0; // Высота фото
-            const w = h * aspectRatio;
-            const d = 0.5; // Толщина фото
-
+            const h = 18.0; const w = h * aspectRatio; const d = 0.5;
             texture.colorSpace = THREE.SRGBColorSpace;
-            const matSide = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8, color: 0xffffff });
-            const matFace = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.2, color: 0xffffff });
-
+            const matSide = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8 });
+            const matFace = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.2 });
             const geometry = new THREE.BoxGeometry(w, h, d);
             const mesh = new THREE.Mesh(geometry, [matSide, matSide, matSide, matSide, matFace, matFace]);
             photoNode.add(mesh);
-        }, undefined, (err) => console.log("Ошибка загрузки фото. Проверь путь photo.jpg"));
+        }, undefined, () => console.log("Проверь photo.jpg"));
 
-        // УПРАВЛЕНИЕ МЫШЬЮ
-        let isDragging = false;
-        let lastPos = { x: 0, y: 0 };
-
-        container.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            lastPos = { x: e.clientX, y: e.clientY };
-        });
+        let isDragging = false; let lastPos = { x: 0, y: 0 };
+        container.addEventListener('mousedown', (e) => { isDragging = true; lastPos = { x: e.clientX, y: e.clientY }; });
         window.addEventListener('mouseup', () => isDragging = false);
-        
         window.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
-            const dx = e.clientX - lastPos.x;
-            const dy = e.clientY - lastPos.y;
-            photoNode.rotation.y += dx * 0.01;
-            photoNode.rotation.x += dy * 0.01;
+            const dx = e.clientX - lastPos.x; const dy = e.clientY - lastPos.y;
+            photoNode.rotation.y += dx * 0.01; photoNode.rotation.x += dy * 0.01;
             lastPos = { x: e.clientX, y: e.clientY };
         });
-
-        // МОБИЛЬНОЕ УПРАВЛЕНИЕ
         container.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                lastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
+            if (e.touches.length === 1) { isDragging = true; lastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
         }, { passive: false });
-
         window.addEventListener('touchend', () => isDragging = false);
-
         container.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            e.preventDefault();
-            const touch = e.touches[0];
-            const dx = touch.clientX - lastPos.x;
-            const dy = touch.clientY - lastPos.y;
-            photoNode.rotation.y += dx * 0.01;
-            photoNode.rotation.x += dy * 0.01;
+            if (!isDragging) return; e.preventDefault();
+            const touch = e.touches[0]; const dx = touch.clientX - lastPos.x; const dy = touch.clientY - lastPos.y;
+            photoNode.rotation.y += dx * 0.01; photoNode.rotation.x += dy * 0.01;
             lastPos = { x: touch.clientX, y: touch.clientY };
         }, { passive: false });
-
-        // ZOOM (Колесико)
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
             let newZ = camera.position.z + (e.deltaY * 0.05);
-            if (newZ < 10) newZ = 10; 
-            if (newZ > 100) newZ = 100;
+            if (newZ < 10) newZ = 10; if (newZ > 100) newZ = 100;
             camera.position.z = newZ;
         }, { passive: false });
-
-        // РЕСАЙЗ ОКНА
         window.addEventListener('resize', () => {
-            const newWidth = container.clientWidth;
-            const newHeight = container.clientHeight;
-            camera.aspect = newWidth / newHeight;
-            camera.updateProjectionMatrix();
+            const newWidth = container.clientWidth; const newHeight = container.clientHeight;
+            camera.aspect = newWidth / newHeight; camera.updateProjectionMatrix();
             renderer.setSize(newWidth, newHeight);
         });
-
         function animate() {
             requestAnimationFrame(animate);
-            // Легкое авто-вращение, если не драгаем
-            if (!isDragging) {
-                photoNode.rotation.y += 0.002;
-            }
+            if (!isDragging) photoNode.rotation.y += 0.002;
             renderer.render(scene, camera);
         }
         animate();
     </script>
 </body>
 </html>
-```[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGLrjwaZJ4nwM6dw5-D1Kzb-OM25ur4ChNQ0sPIAaJ7yI9m46atlFyfOvqbSbf0Qf-CY_Rb5_nwZluhRApq7ibQLYcwuypD8IYUKzdf3QtYFsStv7Eooww1m9CWh9rSy1cVQReCFns7Sj_ttLP6BfYJ0r5I2IIbyPLVGrzizDlrHLuDcpPxSqqbJMpqmTaxKiCHS_dtvkk%3D)][[2](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFkLVEsMVqSBqtNQ6M0SXAekH_X_I-RN2-qjT0QhFyn9Ycxml6lEVHHebYf7v_IJkCq7_VvkbV24AQuNqOylSylmvs5DXUmTtWh0Hl8-Bu-2h19AJFog4eW98lIRl8p7NC1cevGgmoYS9J3WmioNg%3D%3D)][[6](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHKcvj5OY6k2ddOgCibg96SeyU2OzuMt1t0TDY1Uj_7nO55B2aDJKLubOEaG3gMQpV_01JqN8zIe05rIUt7JVTQ-ZLmF8RLM4QC8nk80l7Cs9gWw8jSDpNJX7SkE-A%3D)][[8](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFUJbee10-ft_mkXegnAlkDPScTtB2lsnTss8dFpcAE7viYCm-YGOYKu6Amibai-_lyCW2TW07i7qNuiezXgE0AIoOn15tTyrNzkIvC2gu4vJr19I5HWf2p5uS0fk0xmfVSMcxrJ-Kyoh-gYMdFCpZpZKFYOg5TL7tifA%3D%3D)][[9](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQEBnTZSP8B0r1-9cgF_i8FJlmDPkWUwKU7wA_19_aTwN_TH4rxc9XRgq-4kCuzVr0VOgZeQclUl7UkbL_snpQq_eCYyTpB9xvWWSvJL79EraLttz0HcrBgzQGS7bMs-nuBWIAp0XP_KRrBj0avdDB42Tl6vp3RMkIcO7fvCynm_uHSSUVDO3LXXxG_91wjkAxut2DODb-L84MrvIHwNqA_rA-62smbBiWye3ALDPYTdE9AHrjrBOuLtVAVRwbn3t11xoLckMjDnGgK0UPrL)][[10](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHw-1wKTrehwCIjJYoSPhon6GQyLrvhFRdPTo81mfsSUUnHyTDAHAusBVmIPAkNNqf15bAF4_niyEJ3fLDWKQClp12VwFSML6sx6SsLl_5Su2aVFUmc8RTyWrPT0c5jgYg%3D)][[11](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFLeJNnTTjdxUSpjpcePHelretvSZjZtjnpJsdKiSetY08pO7dbaOWxshvtYUydQiDgq4Vl0B1S5_u1sATugUZmVfb3J5cOV-e5-x_inLS8LGDRsw075XPgxmx1XmqoVYqTH1rdtjCg-Us4P0UDONqROGkGoy9N6XA4vT7x4IWlB42R)]
