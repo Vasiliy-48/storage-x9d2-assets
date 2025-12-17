@@ -2,44 +2,20 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Биография Вайб-Кодера</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Вайб Кодер: Эпизод 404</title>
     <style>
-        /* ОБНУЛЕНИЕ И БАЗА */
-        body, html {
+        /* --- 1. ОСНОВНЫЕ СТИЛИ И КОСМОС --- */
+        body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden; /* Чтобы не было скроллбаров браузера */
-            font-family: 'Arial', sans-serif;
-            background-color: #000;
-        }
-
-        /* ГЛАВНЫЙ КОНТЕЙНЕР (ДЕЛИТ ЭКРАН НА 2 ЧАСТИ) */
-        #main-container {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        /* --- ЛЕВАЯ ЧАСТЬ (ДЛЯ 3D ФОТО) --- */
-        #canvas-container {
-            flex: 1; /* Занимает 50% ширины */
-            background: #111; /* Временный фон, пока нет 3D */
-            position: relative;
-            z-index: 10;
-        }
-
-        /* --- ПРАВАЯ ЧАСТЬ (ТЕКСТ STAR WARS) --- */
-        #text-container {
-            flex: 1; /* Занимает 50% ширины */
-            background: #000;
-            position: relative;
             overflow: hidden;
-            color: #feda4a; /* Тот самый желтый цвет */
+            background-color: #000;
+            color: #ffe81f;
             font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-            /* Генерация звезд на фоне через CSS градиенты (упрощенно) */
+            height: 100vh;
+            width: 100vw;
+            /* Звезды на фоне */
             background-image: 
                 radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
                 radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
@@ -48,232 +24,383 @@
             background-position: 0 0, 40px 60px, 130px 270px;
         }
 
-        /* СЦЕНА С ПЕРСПЕКТИВОЙ */
-        .star-wars-scene {
+        /* --- 2. КОНТЕЙНЕРЫ КОНТЕНТА --- */
+        #main-container {
+            display: flex;
             width: 100%;
             height: 100%;
-            perspective: 300px; /* Глубина 3D */
             position: relative;
+            z-index: 10; /* Контент выше фона, но ниже эффектов, если нужно */
         }
 
-        /* ГРАДИЕНТ СВЕРХУ (РАСТВОРЕНИЕ ТЕКСТА) */
-        .fade-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 25%;
-            background: linear-gradient(to bottom, #000 0%, transparent 100%);
-            z-index: 5;
-        }
-
-        /* КОНТЕЙНЕР ДЛЯ НАКЛОНА */
-        .crawl-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
+        #canvas-container {
+            width: 50%;
             height: 100%;
-            transform-origin: 50% 100%;
-            transform: rotateX(25deg); /* НАКЛОН ВДАЛЬ */
+            position: relative;
+            z-index: 20; /* 3D фото должно быть кликабельным */
+        }
+        canvas { display: block; outline: none; }
+
+        #text-container {
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            z-index: 10;
         }
 
-        /* САМ ТЕКСТ */
-        .crawl-content {
+        /* --- 3. ГЛОБАЛЬНАЯ СЦЕНА БИТВЫ (НА ВЕСЬ ЭКРАН) --- */
+        #global-battle-scene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none; /* Чтобы можно было кликать сквозь корабли */
+            z-index: 5; /* Летают ПОД текстом и ПОД 3D фото (или над, если поменять на 30) */
+            /* Если хочешь, чтобы они летали ПОВЕРХ всего, поставь z-index: 100 */
+            z-index: 15; 
+            overflow: hidden;
+        }
+
+        /* Общие стили для летающих групп */
+        .ship-group {
             position: absolute;
-            top: 100%;
-            left: 10%;
-            width: 80%;
-            text-align: justify;
-            font-size: 1.6rem; 
-            font-weight: bold;
-            letter-spacing: 2px;
-            line-height: 1.6;
-            /* Анимация прокрутки */
+            display: flex;
+            align-items: center;
+            /* filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); */
+        }
+
+        .ship-img {
+            width: 180px; /* Размер кораблей - побольше */
+            height: auto;
+            display: block;
+        }
+
+        /* Лазеры */
+        .laser {
+            position: absolute;
+            width: 0; /* Изначально скрыт */
+            height: 4px;
+            border-radius: 2px;
+            opacity: 0;
+        }
+
+        /* --- 4. АНИМАЦИИ КОРАБЛЕЙ И МАГОВ --- */
+
+        /* === X-WING (Повстанцы) === */
+        .x-wing-wrapper {
+            top: 20%;
+            left: -300px;
+            animation: flyAcrossRight 12s linear infinite;
+        }
+        .x-wing-wrapper .laser {
+            background: #ff0000;
+            box-shadow: 0 0 15px #ff0000;
+            top: 50%; /* Из центра */
+            left: 50%;
+            animation: fireLaserRight 12s linear infinite;
+        }
+
+        /* === TIE FIGHTER (Империя) - Гонится за X-Wing === */
+        .tie-wrapper {
+            top: 25%; /* Чуть ниже X-Wing */
+            left: -600px; /* Летит с задержкой */
+            animation: flyAcrossRight 12s linear infinite;
+            animation-delay: 0.5s; 
+        }
+        .tie-wrapper .laser {
+            background: #00ff00; /* Зеленый лазер */
+            box-shadow: 0 0 15px #00ff00;
+            top: 45%;
+            left: 50%;
+            animation: fireLaserRight 12s linear infinite;
+            animation-delay: 0.8s;
+        }
+
+        /* === ГАРРИ ПОТТЕР (Летит хаотично) === */
+        .wizard-wrapper {
+            top: 80%;
+            right: -300px; /* Летит справа налево */
+            animation: flyWizardComplex 18s linear infinite;
+        }
+        .wizard-wrapper .ship-img {
+            width: 220px; /* Гарри покрупнее */
+        }
+        /* Заклинание (Луч) */
+        .spell-bolt {
+            position: absolute;
+            top: 30px;
+            left: 20px; /* Из палочки (примерно) */
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            box-shadow: 0 0 20px #00ffff, 0 0 40px #0000ff;
+            opacity: 0;
+            animation: castSpell 18s linear infinite;
+        }
+
+        /* === КЛЮЧЕВЫЕ КАДРЫ ДВИЖЕНИЯ === */
+
+        /* Полет слева направо */
+        @keyframes flyAcrossRight {
+            0% { transform: translateX(0) translateY(0) rotate(5deg); }
+            20% { transform: translateX(25vw) translateY(50px) rotate(10deg); }
+            50% { transform: translateX(60vw) translateY(-50px) rotate(0deg); }
+            100% { transform: translateX(120vw) translateY(0) rotate(5deg); }
+        }
+
+        /* Стрельба вправо */
+        @keyframes fireLaserRight {
+            0% { width: 0; opacity: 0; transform: translateX(0); }
+            15% { width: 100px; opacity: 1; } /* Лазер появляется */
+            25% { width: 100px; opacity: 1; transform: translateX(600px); } /* Улетает вперед */
+            30% { width: 0; opacity: 0; transform: translateX(800px); } /* Исчезает */
+            100% { opacity: 0; }
+        }
+
+        /* Полет мага (сложная траектория) */
+        @keyframes flyWizardComplex {
+            0% { transform: translateX(0) translateY(0) scale(0.8); right: -300px; top: 70%; }
+            25% { transform: translateX(-40vw) translateY(-100px) scale(0.9); }
+            50% { transform: translateX(-60vw) translateY(50px) scale(1); }
+            75% { transform: translateX(-80vw) translateY(-50px) scale(0.9); }
+            100% { transform: translateX(-120vw) translateY(0) scale(0.8); right: 100%; }
+        }
+
+        /* Каст заклинания (Вспышка и полет) */
+        @keyframes castSpell {
+            0%, 40% { opacity: 0; transform: translate(0,0); }
+            45% { opacity: 1; transform: translate(-20px, 0) scale(1.5); } /* Накопление */
+            50% { opacity: 1; transform: translate(-800px, 100px) scale(0.5); } /* Выстрел влево-вниз */
+            55% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        /* --- 5. ТЕКСТ STAR WARS (Правая часть) --- */
+        .star-wars-scene { width: 100%; height: 100%; perspective: 300px; }
+        .crawl-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            transform-origin: 50% 100%; transform: rotateX(25deg);
+        }
+        .crawl-content {
+            position: absolute; top: 100%; left: 10%; width: 80%;
+            text-align: justify; font-size: 1.8rem; font-weight: bold;
+            line-height: 1.5; letter-spacing: 2px;
             animation: crawl 60s linear infinite;
         }
-
-        .title {
-            text-align: center;
-            margin-bottom: 80px;
+        .title h1 { font-size: 3rem; text-transform: uppercase; color: #ffe81f; text-shadow: 0 0 10px #bfaa18; }
+        .title h2 { font-size: 2rem; }
+        .fade-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 25%;
+            background: linear-gradient(to bottom, #000 0%, transparent 100%); z-index: 5;
         }
 
-        .title h1 {
-            font-size: 4rem;
-            margin: 0;
-            text-transform: uppercase;
-        }
-        .title h2 {
-            font-size: 2.5rem;
-            margin: 0;
-        }
-
-        /* КЛЮЧЕВЫЕ КАДРЫ АНИМАЦИИ ТЕКСТА */
         @keyframes crawl {
-            0% {
-                top: 100%;
-                opacity: 1;
-                transform: translateZ(0);
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                top: -250%; /* Улетает далеко вверх */
-                opacity: 0;
-                transform: translateZ(-1000px); /* Уменьшается */
-            }
+            0% { top: 100%; opacity: 1; transform: translateZ(0); }
+            95% { opacity: 1; }
+            100% { top: -250%; opacity: 0; transform: translateZ(-1000px); }
         }
 
-        /* --- ЛЕТАЮЩИЕ ОБЪЕКТЫ (ФОН) --- */
-        .battle-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* Под текстом */
-            pointer-events: none;
-        }
-
-        .flying-obj {
-            position: absolute;
-            opacity: 0.8;
-            filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
-        }
-
-        /* Имперский истребитель */
-        .tie-fighter {
-            top: 50%;
-            left: -20%;
-            animation: flyChase 10s linear infinite;
-            animation-delay: 2s;
-        }
-
-        /* X-Wing (Повстанцы) */
-        .x-wing {
-            top: 50%;
-            left: -20%;
-            animation: flyChase 10s linear infinite;
-        }
-
-        /* Маг на метле */
-        .wizard {
-            top: 110%;
-            left: 10%;
-            animation: flyWizard 15s linear infinite;
-            animation-delay: 5s;
-        }
-
-        /* АНИМАЦИИ ПОЛЕТОВ */
-        
-        /* Погоня слева направо */
-        @keyframes flyChase {
-            0% { left: -20%; transform: scale(0.3) rotate(15deg); }
-            100% { left: 120%; transform: scale(0.6) rotate(15deg); }
-        }
-
-        /* Маг летит по диагонали снизу вверх */
-        @keyframes flyWizard {
-            0% { top: 110%; left: 10%; transform: scale(0.5) rotate(-20deg); }
-            50% { transform: scale(0.8) rotate(-10deg); }
-            100% { top: -20%; left: 90%; transform: scale(0.2) rotate(0deg); }
-        }
-
-        /* АДАПТИВНОСТЬ (ДЛЯ ТЕЛЕФОНОВ) */
+        /* --- 6. МОБИЛКА --- */
         @media (max-width: 768px) {
-            #main-container {
-                flex-direction: column;
-            }
-            #canvas-container, #text-container {
-                flex: none;
-                height: 50%;
-                width: 100%;
-            }
-            .crawl-content {
-                font-size: 1rem;
-            }
-            .title h1 { font-size: 2rem; }
-            .title h2 { font-size: 1.5rem; }
+            #main-container { flex-direction: column; }
+            #canvas-container, #text-container { width: 100%; height: 50%; }
+            .crawl-content { font-size: 1.1rem; }
+            .ship-img { width: 100px; } /* Уменьшаем корабли на телефоне */
         }
     </style>
+
+    <!-- Подключение Three.js -->
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
 </head>
 <body>
 
-<div id="main-container">
-    <!-- ЛЕВАЯ ЧАСТЬ: СЮДА ВСТАВЛЯЙ КОД ДЛЯ 3D ФОТО -->
-    <div id="canvas-container">
-        <!-- Место для Three.js или другой библиотеки -->
+    <!-- ГЛОБАЛЬНАЯ СЦЕНА БИТВЫ (НА ВЕСЬ ЭКРАН) -->
+    <div id="global-battle-scene">
+        
+        <!-- 1. Группа X-WING (Повстанец) -->
+        <div class="ship-group x-wing-wrapper">
+            <!-- Ссылка на реалистичный PNG X-Wing -->
+            <img src="https://www.pngkey.com/png/full/2-24357_x-wing-fighter-png-star-wars-x-wing.png" class="ship-img" alt="X-Wing">
+            <div class="laser"></div>
+        </div>
+
+        <!-- 2. Группа TIE FIGHTER (Империя) -->
+        <div class="ship-group tie-wrapper">
+            <!-- Ссылка на реалистичный PNG TIE Fighter -->
+            <img src="https://www.pngkey.com/png/full/13-138676_star-wars-tie-fighter-png.png" class="ship-img" alt="TIE Fighter">
+            <div class="laser"></div>
+        </div>
+
+        <!-- 3. Группа ГАРРИ ПОТТЕР (Маг) -->
+        <div class="ship-group wizard-wrapper">
+            <!-- Ссылка на реалистичного Гарри на метле -->
+            <img src="https://www.pngkey.com/png/full/13-132338_harry-potter-flying-png-harry-potter-on-broom.png" class="ship-img" alt="Harry Potter">
+            <div class="spell-bolt"></div>
+        </div>
+
     </div>
 
-    <!-- ПРАВАЯ ЧАСТЬ: ТЕКСТ И АНИМАЦИИ -->
-    <div id="text-container">
-        
-        <!-- Сцена для анимации перспективы -->
-        <div class="star-wars-scene">
-            
-            <!-- ФОНОВЫЕ ЛЕТАЛКИ -->
-            <div class="battle-background">
-                <!-- X-Wing (Красный) -->
-                <div class="flying-obj x-wing">
-                    <svg viewBox="0 0 24 24" width="60" height="60" fill="#ff4444">
-                        <path d="M21,14.5L13,2l-1.5,2.5L12,5l0.5,0.5L2,20h3l7.5-12l0.5-0.5l0.5,0.5l7.5,12h3L21,14.5z M5.6,19L12,8.8L18.4,19H5.6z"/>
-                    </svg>
-                </div>
-                <!-- TIE Fighter (Белый) - Летит за X-Wing -->
-                <div class="flying-obj tie-fighter">
-                    <svg viewBox="0 0 24 24" width="50" height="50" fill="#eeeeee">
-                         <path d="M19,3h2v18h-2V3z M3,3h2v18H3V3z M6,9h12v6H6V9z M10,8h4v8h-4V8z"/>
-                    </svg>
-                </div>
-                <!-- Гарри Поттер на метле -->
-                <div class="flying-obj wizard">
-                    <svg viewBox="0 0 100 100" width="80" height="80" fill="#daa520">
-                        <!-- Условный силуэт на метле -->
-                        <path d="M10,80 Q30,75 50,70 Q70,65 90,60 L95,55 L85,65 Q65,75 45,85 Z" />
-                        <circle cx="50" cy="50" r="10" />
-                        <path d="M40,50 L30,40 L60,40 Z" />
-                    </svg>
-                </div>
-            </div>
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР С КОНТЕНТОМ -->
+    <div id="main-container">
+        <!-- ЛЕВАЯ ЧАСТЬ: 3D ФОТО -->
+        <div id="canvas-container"></div>
 
-            <!-- ЗАТЕМНЕНИЕ СВЕРХУ -->
+        <!-- ПРАВАЯ ЧАСТЬ: ТЕКСТ -->
+        <div id="text-container">
             <div class="fade-overlay"></div>
-
-            <!-- ТЕКСТОВАЯ ПРОКРУТКА -->
-            <div class="crawl-container">
-                <div class="crawl-content">
-                    <div class="title">
-                        <h1>Эпизод 404</h1>
-                        <h2>Скрытая Угроза Вайба</h2>
+            <div class="star-wars-scene">
+                <div class="crawl-container">
+                    <div class="crawl-content">
+                        <div class="title">
+                            <h1>Эпизод 404</h1>
+                            <h2>Скрытая Угроза Вайба</h2>
+                        </div>
+                        <p>
+                            Давным-давно, в панельной галактике Щёлково, где климат суровее, чем на ледяном Хоте, а местные жители в пятницу вечером опаснее, чем народ песков Татуина...
+                        </p>
+                        <p>
+                            Именно там родился Он — Мальчик, Который Выжил (в утренней маршрутке до Москвы). С ранних лет он ждал заветную сову из Хогвартса с приглашением на факультет Гриффиндор, но вместо этого к нему пришла повестка на Тёмную Сторону Силы — в IT-департамент.
+                        </p>
+                        <p>
+                            Он мечтал стать Избранным Джедаем, владеть световым мечом C++ и уничтожать баги заклинанием «Экспекто Патронус». Но Империя Дедлайнов и Лорд Лень оказались коварнее.
+                        </p>
+                        <p>
+                            Тёмные силы соблазнили его печеньками, удалёнкой и нейросетями. Его мидихлорианы смешались с кофеином. Теперь он не просто кодер — он <b>ВАЙБ-КОДЕР</b>.
+                        </p>
+                        <p>
+                            Вооруженный лишь магией «Ctrl+C / Ctrl+V» и Силой рандома, он летит сквозь тернии к звездам (и зарплате), уворачиваясь от имперских крейсеров правок и дементоров из бухгалтерии.
+                        </p>
+                        <p>
+                            Он пишет код, который держится не на логике, а на честном слове Дамблдора. И да пребудет с ним Stack Overflow... всегда.
+                        </p>
+                        <p style="text-align:center">***</p>
                     </div>
-                    
-                    <p>
-                        Давным-давно, в панельной галактике Щёлково, где климат суровее, чем на ледяном Хоте, а местные жители в пятницу вечером опаснее, чем народ песков Татуина...
-                    </p>
-                    <p>
-                        Именно там родился Он — Мальчик, Который Выжил (в утренней маршрутке до Москвы). С ранних лет он ждал заветную сову из Хогвартса с приглашением на факультет Гриффиндор, но вместо этого к нему пришла повестка на Тёмную Сторону Силы — в IT-департамент.
-                    </p>
-                    <p>
-                        Он мечтал стать Избранным Джедаем, владеть световым мечом C++ и уничтожать баги заклинанием «Экспекто Патронус». Но Империя Дедлайнов и Лорд Лень оказались коварнее.
-                    </p>
-                    <p>
-                        Тёмные силы соблазнили его печеньками, удалёнкой и нейросетями. Его мидихлорианы смешались с кофеином. Теперь он не просто кодер — он <b>ВАЙБ-КОДЕР</b>.
-                    </p>
-                    <p>
-                        Вооруженный лишь магией «Ctrl+C / Ctrl+V» и Силой рандома, он летит сквозь тернии к звездам (и зарплате), уворачиваясь от имперских крейсеров правок и дементоров из бухгалтерии.
-                    </p>
-                    <p>
-                        Он пишет код, который держится не на логике, а на честном слове Дамблдора. И да пребудет с ним Stack Overflow... всегда.
-                    </p>
-                    <p style="text-align: center;">
-                        ***
-                    </p>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
+    <!-- СКРИПТ THREE.JS (3D ФОТО) -->
+    <script type="module">
+        import * as THREE from 'three';
+
+        const container = document.getElementById('canvas-container');
+
+        // СЦЕНА
+        const scene = new THREE.Scene();
+        scene.background = null; // Прозрачный фон, чтобы видеть звезды
+
+        // КАМЕРА
+        const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+        camera.position.set(0, 0, 40);
+
+        // РЕНДЕРЕР
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        // СВЕТ
+        const light = new THREE.DirectionalLight(0xffffff, 1.5);
+        light.position.set(-5, 10, 10); 
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+
+        // --- ВАЖНО: УКАЖИ СВОЕ ФОТО ЗДЕСЬ ---
+        const imageSource = './photo.jpg'; 
+        
+        const textureLoader = new THREE.TextureLoader();
+        const photoNode = new THREE.Group();
+        scene.add(photoNode);
+
+        textureLoader.load(imageSource, (texture) => {
+            const aspectRatio = texture.image.width / texture.image.height;
+            const h = 18.0; // Высота фото
+            const w = h * aspectRatio;
+            const d = 0.5; // Толщина фото
+
+            texture.colorSpace = THREE.SRGBColorSpace;
+            const matSide = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8, color: 0xffffff });
+            const matFace = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.2, color: 0xffffff });
+
+            const geometry = new THREE.BoxGeometry(w, h, d);
+            const mesh = new THREE.Mesh(geometry, [matSide, matSide, matSide, matSide, matFace, matFace]);
+            photoNode.add(mesh);
+        }, undefined, (err) => console.log("Ошибка загрузки фото. Проверь путь photo.jpg"));
+
+        // УПРАВЛЕНИЕ МЫШЬЮ
+        let isDragging = false;
+        let lastPos = { x: 0, y: 0 };
+
+        container.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastPos = { x: e.clientX, y: e.clientY };
+        });
+        window.addEventListener('mouseup', () => isDragging = false);
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - lastPos.x;
+            const dy = e.clientY - lastPos.y;
+            photoNode.rotation.y += dx * 0.01;
+            photoNode.rotation.x += dy * 0.01;
+            lastPos = { x: e.clientX, y: e.clientY };
+        });
+
+        // МОБИЛЬНОЕ УПРАВЛЕНИЕ
+        container.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', () => isDragging = false);
+
+        container.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const dx = touch.clientX - lastPos.x;
+            const dy = touch.clientY - lastPos.y;
+            photoNode.rotation.y += dx * 0.01;
+            photoNode.rotation.x += dy * 0.01;
+            lastPos = { x: touch.clientX, y: touch.clientY };
+        }, { passive: false });
+
+        // ZOOM (Колесико)
+        container.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            let newZ = camera.position.z + (e.deltaY * 0.05);
+            if (newZ < 10) newZ = 10; 
+            if (newZ > 100) newZ = 100;
+            camera.position.z = newZ;
+        }, { passive: false });
+
+        // РЕСАЙЗ ОКНА
+        window.addEventListener('resize', () => {
+            const newWidth = container.clientWidth;
+            const newHeight = container.clientHeight;
+            camera.aspect = newWidth / newHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(newWidth, newHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            // Легкое авто-вращение, если не драгаем
+            if (!isDragging) {
+                photoNode.rotation.y += 0.002;
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
 </body>
 </html>
+```[[1](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQGLrjwaZJ4nwM6dw5-D1Kzb-OM25ur4ChNQ0sPIAaJ7yI9m46atlFyfOvqbSbf0Qf-CY_Rb5_nwZluhRApq7ibQLYcwuypD8IYUKzdf3QtYFsStv7Eooww1m9CWh9rSy1cVQReCFns7Sj_ttLP6BfYJ0r5I2IIbyPLVGrzizDlrHLuDcpPxSqqbJMpqmTaxKiCHS_dtvkk%3D)][[2](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFkLVEsMVqSBqtNQ6M0SXAekH_X_I-RN2-qjT0QhFyn9Ycxml6lEVHHebYf7v_IJkCq7_VvkbV24AQuNqOylSylmvs5DXUmTtWh0Hl8-Bu-2h19AJFog4eW98lIRl8p7NC1cevGgmoYS9J3WmioNg%3D%3D)][[6](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHKcvj5OY6k2ddOgCibg96SeyU2OzuMt1t0TDY1Uj_7nO55B2aDJKLubOEaG3gMQpV_01JqN8zIe05rIUt7JVTQ-ZLmF8RLM4QC8nk80l7Cs9gWw8jSDpNJX7SkE-A%3D)][[8](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFUJbee10-ft_mkXegnAlkDPScTtB2lsnTss8dFpcAE7viYCm-YGOYKu6Amibai-_lyCW2TW07i7qNuiezXgE0AIoOn15tTyrNzkIvC2gu4vJr19I5HWf2p5uS0fk0xmfVSMcxrJ-Kyoh-gYMdFCpZpZKFYOg5TL7tifA%3D%3D)][[9](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQEBnTZSP8B0r1-9cgF_i8FJlmDPkWUwKU7wA_19_aTwN_TH4rxc9XRgq-4kCuzVr0VOgZeQclUl7UkbL_snpQq_eCYyTpB9xvWWSvJL79EraLttz0HcrBgzQGS7bMs-nuBWIAp0XP_KRrBj0avdDB42Tl6vp3RMkIcO7fvCynm_uHSSUVDO3LXXxG_91wjkAxut2DODb-L84MrvIHwNqA_rA-62smbBiWye3ALDPYTdE9AHrjrBOuLtVAVRwbn3t11xoLckMjDnGgK0UPrL)][[10](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQHw-1wKTrehwCIjJYoSPhon6GQyLrvhFRdPTo81mfsSUUnHyTDAHAusBVmIPAkNNqf15bAF4_niyEJ3fLDWKQClp12VwFSML6sx6SsLl_5Su2aVFUmc8RTyWrPT0c5jgYg%3D)][[11](https://www.google.com/url?sa=E&q=https%3A%2F%2Fvertexaisearch.cloud.google.com%2Fgrounding-api-redirect%2FAUZIYQFLeJNnTTjdxUSpjpcePHelretvSZjZtjnpJsdKiSetY08pO7dbaOWxshvtYUydQiDgq4Vl0B1S5_u1sATugUZmVfb3J5cOV-e5-x_inLS8LGDRsw075XPgxmx1XmqoVYqTH1rdtjCg-Us4P0UDONqROGkGoy9N6XA4vT7x4IWlB42R)]
