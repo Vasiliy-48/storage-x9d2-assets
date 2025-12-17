@@ -3,19 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>3D Photo</title>
+    <title>3D Biography</title>
     <style>
+        /* --- 1. ОСНОВНЫЕ СТИЛИ И КОСМОС --- */
         body {
             margin: 0;
-            overflow: hidden; /* Убираем скроллбары */
-            background-color: #151515;
-            touch-action: none; /* Отключаем стандартные жесты браузера (зум, скролл) */
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            color: #ffe81f; /* Знаменитый желтый цвет ЗВ */
+            font-family: 'Arial', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            /* Генерация звезд через CSS градиенты (очень производительно) */
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 3px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 2px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 3px);
+            background-size: 550px 550px, 350px 350px, 250px 250px;
+            background-position: 0 0, 40px 60px, 130px 270px;
+        }
+
+        /* Контейнер для разделения экрана */
+        #main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- 2. ЛЕВАЯ ПОЛОВИНА (3D ФОТО) --- */
+        #canvas-container {
+            width: 50%;
+            height: 100%;
+            position: relative;
+            /* Чтобы канвас не вылезал */
+            overflow: hidden; 
         }
         canvas {
             display: block;
+            outline: none;
+        }
+
+        /* --- 3. ПРАВАЯ ПОЛОВИНА (ТЕКСТ) --- */
+        #text-container {
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            perspective: 400px; /* Глубина 3D для текста */
+        }
+
+        .star-wars-intro {
+            height: 100%;
+            width: 100%;
+            font-size: 300%;
+            font-weight: 700;
+            text-align: justify;
+            position: relative;
+        }
+
+        /* Сама "уползающая" лента текста */
+        .crawl {
+            position: absolute;
+            top: 100%; /* Начинаем снизу */
+            left: 5%;
+            width: 90%;
+            margin: 0 auto;
+            transform-origin: 50% 100%;
+            transform: rotateX(25deg); /* Наклон текста назад */
+            animation: crawl 60s linear infinite; /* Анимация 60 секунд */
+        }
+
+        .crawl h1 {
+            text-align: center;
+            margin-bottom: 50px;
+            font-size: 1.5em;
+            text-transform: uppercase;
+        }
+
+        .crawl p {
+            line-height: 1.5em;
+            margin-bottom: 30px;
+            font-size: 0.6em; /* Размер шрифта текста */
+        }
+
+        /* Анимация движения */
+        @keyframes crawl {
+            0% {
+                top: 100%;
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                top: -200%; /* Улетает далеко вверх */
+                opacity: 0;
+            }
+        }
+
+        /* Затемнение сверху, чтобы текст плавно исчезал */
+        .fade-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 20vh;
+            background: linear-gradient(to bottom, #000 0%, transparent 100%);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        /* --- 4. АДАПТИВНОСТЬ (ТЕЛЕФОНЫ) --- */
+        @media (max-width: 768px) {
+            #main-container {
+                flex-direction: column; /* Вертикальное расположение */
+            }
+            #canvas-container {
+                width: 100%;
+                height: 50%; /* Половина высоты экрана */
+            }
+            #text-container {
+                width: 100%;
+                height: 50%;
+                perspective: 300px;
+            }
+            .crawl {
+                animation-duration: 40s; /* На телефоне быстрее */
+            }
+            .crawl p {
+                font-size: 0.8em;
+                text-align: center;
+            }
         }
     </style>
-    <!-- Подключаем Three.js через CDN -->
+    <!-- Подключаем Three.js -->
     <script type="importmap">
         {
             "imports": {
@@ -26,154 +148,150 @@
 </head>
 <body>
 
+<div id="main-container">
+    <!-- ЛЕВАЯ ЧАСТЬ: 3D ФОТО -->
+    <div id="canvas-container"></div>
+
+    <!-- ПРАВАЯ ЧАСТЬ: ТЕКСТ -->
+    <div id="text-container">
+        <div class="fade-overlay"></div>
+        <div class="star-wars-intro">
+            <div class="crawl">
+                <!-- ЗАГОЛОВОК -->
+                <h1>Эпизод 404<br>Скрытая Угроза Вайба</h1>
+                
+                <!-- ТЕКСТ БИОГРАФИИ -->
+                <p>
+                    Давным-давно, в панельной галактике Щёлково, где климат суровее, чем на Хоте, а местные жители опаснее, чем народ песков Татуина...
+                </p>
+                <p>
+                    Именно там родился Он — Мальчик, Который Выжил (в маршрутке до Москвы). С детства он ждал сову из Хогвартса с приглашением в IT, но вместо этого к нему пришла повестка на Тёмную Сторону Силы.
+                </p>
+                <p>
+                    Он мечтал стать Избранным, владеть световым мечом C++ и уничтожать баги заклинанием «Экспекто Патронус». Но Империя Дедлайнов и Лорд Лень оказались хитрее.
+                </p>
+                <p>
+                    Тёмные силы соблазнили его печеньками и нейросетями. Теперь он не просто кодер — он Вайб-Кодер. Он не пишет код, он его *чувствует*.
+                </p>
+                <p>
+                    Вооруженный лишь магией «Ctrl+C / Ctrl+V» и Силой рандома, он летит сквозь тернии к звездам (и зарплате), доказывая, что если код работает — это не баг, это Волшебство.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import * as THREE from 'three';
 
-    // --- 1. НАСТРОЙКА СЦЕНЫ ---
+    // Получаем контейнер для 3D
+    const container = document.getElementById('canvas-container');
+
+    // --- 1. СЦЕНА ---
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#252527');
+    // ФОН ПРОЗРАЧНЫЙ (null), чтобы видеть CSS-звезды сзади
+    scene.background = null; 
 
     // --- 2. КАМЕРА ---
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+    // Соотношение сторон берем от контейнера, а не от всего окна
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
     camera.position.set(0, 0, 40);
 
     // --- 3. РЕНДЕРЕР ---
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // alpha: true для прозрачности
+    renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    document.body.appendChild(renderer.domElement);
+    container.appendChild(renderer.domElement);
 
-    // --- 4. ОСВЕЩЕНИЕ ---
+    // --- 4. СВЕТ ---
     const light = new THREE.DirectionalLight(0xffffff, 1.5);
     light.position.set(-5, 10, 10); 
     scene.add(light);
-    
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
-    scene.add(ambientLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
 
-    // --- 5. ЗАГРУЗКА ФОТО ---
-    
-    // ВАЖНО: Ссылка на файл рядом
+    // --- 5. ОБЪЕКТ ---
     const imageSource = './photo.jpg'; 
-    
     const textureLoader = new THREE.TextureLoader();
     const photoNode = new THREE.Group();
     scene.add(photoNode);
 
-    textureLoader.load(
-        imageSource,
-        (texture) => {
-            const imgWidth = texture.image.width;
-            const imgHeight = texture.image.height;
-            const aspectRatio = imgWidth / imgHeight;
+    textureLoader.load(imageSource, (texture) => {
+        const aspectRatio = texture.image.width / texture.image.height;
+        const h = 15.0;
+        const w = h * aspectRatio;
+        const d = 0.5;
 
-            const h = 15.0;
-            const w = h * aspectRatio;
-            const d = 0.5;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const matSide = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.8, color: 0xffffff });
+        const matFace = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.2, color: 0xffffff });
 
-            texture.colorSpace = THREE.SRGBColorSpace;
+        const geometry = new THREE.BoxGeometry(w, h, d);
+        const mesh = new THREE.Mesh(geometry, [matSide, matSide, matSide, matSide, matFace, matFace]);
+        photoNode.add(mesh);
+    }, undefined, (err) => console.error(err));
 
-            const sideMaterial = new THREE.MeshStandardMaterial({ 
-                map: texture, 
-                roughness: 0.8,
-                color: 0xffffff
-            });
-
-            const faceMaterial = new THREE.MeshStandardMaterial({ 
-                map: texture, 
-                roughness: 0.2,
-                color: 0xffffff
-            });
-
-            const materials = [
-                sideMaterial, // Right
-                sideMaterial, // Left
-                sideMaterial, // Top
-                sideMaterial, // Bottom
-                faceMaterial, // Front
-                faceMaterial  // Back
-            ];
-
-            const geometry = new THREE.BoxGeometry(w, h, d);
-            const mesh = new THREE.Mesh(geometry, materials);
-            photoNode.add(mesh);
-        },
-        undefined, 
-        (err) => { console.error('Ошибка загрузки текстуры', err); }
-    );
-
-    // --- 6. УПРАВЛЕНИЕ (МЫШЬ + СЕНСОР) ---
-    
+    // --- 6. УПРАВЛЕНИЕ (Привязано только к canvas-container) ---
     let isDragging = false;
     let lastPos = { x: 0, y: 0 };
 
-    // === ДЛЯ КОМПЬЮТЕРА (МЫШЬ) ===
-    window.addEventListener('mousedown', (e) => {
+    // Слушаем события именно на контейнере 3D, чтобы прокрутка текста не мешала
+    container.addEventListener('mousedown', (e) => {
         isDragging = true;
         lastPos = { x: e.clientX, y: e.clientY };
     });
-
-    window.addEventListener('mouseup', () => {
-        isDragging = false;
-    });
-
+    window.addEventListener('mouseup', () => isDragging = false);
+    
+    // Mouse move
     window.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
-        handleMove(e.clientX, e.clientY);
+        const dx = e.clientX - lastPos.x;
+        const dy = e.clientY - lastPos.y;
+        photoNode.rotation.y += dx * 0.01;
+        photoNode.rotation.x += dy * 0.01;
+        lastPos = { x: e.clientX, y: e.clientY };
     });
 
-    // === ДЛЯ ТЕЛЕФОНА (ТАЧСКРИН) ===
-    window.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 1) { // Если касание одним пальцем
+    // Touch events (Мобильные)
+    container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
             isDragging = true;
             lastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
         }
     }, { passive: false });
 
-    window.addEventListener('touchend', () => {
-        isDragging = false;
-    });
+    window.addEventListener('touchend', () => isDragging = false);
 
-    window.addEventListener('touchmove', (e) => {
+    container.addEventListener('touchmove', (e) => {
         if (!isDragging) return;
-        // preventDefault отключает прокрутку страницы браузером
-        e.preventDefault(); 
-        
-        // Берем координаты первого пальца
+        e.preventDefault(); // Блокируем скролл страницы при вращении фото
         const touch = e.touches[0];
-        handleMove(touch.clientX, touch.clientY);
+        const dx = touch.clientX - lastPos.x;
+        const dy = touch.clientY - lastPos.y;
+        photoNode.rotation.y += dx * 0.01;
+        photoNode.rotation.x += dy * 0.01;
+        lastPos = { x: touch.clientX, y: touch.clientY };
     }, { passive: false });
 
-    // === ОБЩАЯ ЛОГИКА ВРАЩЕНИЯ ===
-    function handleMove(currentX, currentY) {
-        const dx = currentX - lastPos.x;
-        const dy = currentY - lastPos.y;
-
-        const sensitivity = 0.01;
-        
-        photoNode.rotation.y += dx * sensitivity;
-        photoNode.rotation.x += dy * sensitivity;
-
-        lastPos = { x: currentX, y: currentY };
-    }
-
-    // === ЗУМ КОЛЕСИКОМ (ТОЛЬКО ПК) ===
-    window.addEventListener('wheel', (e) => {
-        const zoomSpeed = 0.05;
-        let newZ = camera.position.z + (e.deltaY * zoomSpeed);
-        if (newZ < 10) newZ = 10;
+    // Zoom
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault(); // Чтобы не скроллилась страница
+        let newZ = camera.position.z + (e.deltaY * 0.05);
+        if (newZ < 10) newZ = 10; 
         if (newZ > 100) newZ = 100;
         camera.position.z = newZ;
-    });
+    }, { passive: false });
 
-    // Изменение размера окна
+    // --- 7. РЕСАЙЗ ОКНА ---
     window.addEventListener('resize', () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        // Обновляем размеры исходя из размеров контейнера, а не окна
+        const newWidth = container.clientWidth;
+        const newHeight = container.clientHeight;
+        
+        camera.aspect = newWidth / newHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setSize(newWidth, newHeight);
     });
 
-    // --- 7. АНИМАЦИЯ ---
     function animate() {
         requestAnimationFrame(animate);
         renderer.render(scene, camera);
