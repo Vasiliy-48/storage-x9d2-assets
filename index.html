@@ -2,14 +2,15 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Вайб Кодер: Эпизод 404</title>
+    <!-- Важно: запрещаем зум страницы пальцами, чтобы зумилось только 3D фото -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Вайб Кодер: Мобильная Версия</title>
     <style>
         /* --- 1. БАЗА И КОСМОС --- */
         body {
             margin: 0;
             padding: 0;
-            overflow: hidden;
+            overflow: hidden; /* Блокируем скролл всей страницы */
             background-color: #000;
             color: #ffe81f;
             font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
@@ -24,11 +25,37 @@
             background-position: 0 0, 40px 60px, 130px 270px;
         }
 
-        /* --- 2. LAYOUT --- */
-        #main-container { display: flex; width: 100%; height: 100%; position: relative; z-index: 10; }
-        #canvas-container { width: 50%; height: 100%; position: relative; z-index: 20; }
+        /* --- 2. LAYOUT (АДАПТИВНЫЙ) --- */
+        #main-container { 
+            display: flex; 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            z-index: 10;
+            /* По умолчанию (ПК) - горизонтально */
+            flex-direction: row; 
+        }
+
+        #canvas-container { 
+            position: relative; 
+            z-index: 20; 
+            /* Для ПК */
+            width: 50%; 
+            height: 100%;
+            /* Важно для мобилок: запрет на системные жесты внутри канваса */
+            touch-action: none; 
+        }
+
+        #text-container { 
+            overflow: hidden; 
+            position: relative; 
+            z-index: 10;
+            /* Для ПК */
+            width: 50%; 
+            height: 100%;
+        }
+
         canvas { display: block; outline: none; }
-        #text-container { width: 50%; height: 100%; overflow: hidden; position: relative; z-index: 10; }
 
         /* --- 3. СЦЕНА БИТВЫ (ВЕСЬ ЭКРАН) --- */
         #global-battle-scene {
@@ -48,54 +75,36 @@
            ========================================= */
 
         /* --- TIE FIGHTER --- */
-        .css-tie {
-            width: 40px; height: 40px;
-            position: relative;
-        }
+        .css-tie { width: 40px; height: 40px; position: relative; }
         .tie-cockpit {
             width: 30px; height: 30px;
             background: radial-gradient(circle at 30% 30%, #555, #000);
-            border-radius: 50%;
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            border: 2px solid #222; z-index: 2;
+            border-radius: 50%; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); border: 2px solid #222; z-index: 2;
         }
         .tie-wing {
-            position: absolute; top: -10px;
-            width: 8px; height: 60px;
+            position: absolute; top: -10px; width: 8px; height: 60px;
             background: #111; border: 1px solid #444; border-radius: 2px;
         }
         .tie-wing.left { left: -10px; }
         .tie-wing.right { right: -10px; }
         .tie-strut {
-            position: absolute; top: 50%;
-            width: 60px; height: 4px;
+            position: absolute; top: 50%; width: 60px; height: 4px;
             background: #333; left: -10px; transform: translateY(-50%); z-index: 1;
         }
 
         /* --- X-WING --- */
-        .css-xwing {
-            width: 80px; height: 30px;
-            position: relative;
-            transform: rotate(5deg);
-        }
+        .css-xwing { width: 80px; height: 30px; position: relative; transform: rotate(5deg); }
         .x-body {
-            width: 80px; height: 10px;
-            background: linear-gradient(to right, #ddd, #999);
-            border-radius: 0 50% 50% 0; /* Острый нос */
-            position: absolute; top: 10px; left: 0; z-index: 2;
+            width: 80px; height: 10px; background: linear-gradient(to right, #ddd, #999);
+            border-radius: 0 50% 50% 0; position: absolute; top: 10px; left: 0; z-index: 2;
         }
         .x-body::after {
             content: ''; position: absolute; top: 3px; left: 10px;
             width: 40px; height: 4px; background: #cc0000;
         }
-        .x-wings {
-            position: absolute; top: 5px; left: 10px;
-            width: 40px; height: 20px;
-        }
-        .wing-pair {
-            position: absolute; width: 40px; height: 4px; background: #ccc;
-        }
+        .x-wings { position: absolute; top: 5px; left: 10px; width: 40px; height: 20px; }
+        .wing-pair { position: absolute; width: 40px; height: 4px; background: #ccc; }
         .wing-top { transform: rotate(-15deg); top: 0; }
         .wing-bottom { transform: rotate(15deg); top: 15px; }
         .engine {
@@ -105,100 +114,64 @@
         .wing-top .engine { top: -1px; }
         .wing-bottom .engine { top: -1px; }
 
-
         /* --- МАГ (КОЛДУН) --- */
         .css-wizard {
-            width: 60px; height: 40px;
-            position: relative;
-            /* !!! ГЛАВНОЕ ИСПРАВЛЕНИЕ: ОТЗЕРКАЛИВАЕМ ЕГО ПО ГОРИЗОНТАЛИ !!! */
-            transform: scaleX(-1); 
+            width: 60px; height: 40px; position: relative;
+            transform: scaleX(-1); /* Зеркалим, чтобы летел вперед */
         }
         .broom {
-            width: 60px; height: 4px;
-            background: #8B4513; position: absolute; bottom: 10px; left: 0;
+            width: 60px; height: 4px; background: #8B4513; position: absolute; bottom: 10px; left: 0;
             border-radius: 2px; transform: rotate(-5deg);
         }
         .broom::before {
             content: ''; position: absolute; left: -10px; top: -3px;
-            width: 15px; height: 10px; background: #DAA520;
-            border-radius: 50% 0 0 50%;
+            width: 15px; height: 10px; background: #DAA520; border-radius: 50% 0 0 50%;
         }
         .robe {
-            width: 0; height: 0;
-            border-left: 20px solid transparent; border-right: 10px solid transparent;
-            border-bottom: 30px solid #111;
-            position: absolute; bottom: 12px; left: 15px;
-            transform: rotate(-15deg);
+            width: 0; height: 0; border-left: 20px solid transparent; border-right: 10px solid transparent;
+            border-bottom: 30px solid #111; position: absolute; bottom: 12px; left: 15px; transform: rotate(-15deg);
         }
         .head {
-            width: 12px; height: 12px; background: #ffcc99;
-            border-radius: 50%; position: absolute; top: -5px; left: 30px;
+            width: 12px; height: 12px; background: #ffcc99; border-radius: 50%;
+            position: absolute; top: -5px; left: 30px;
         }
         .hat {
-            width: 0; height: 0;
-            border-left: 10px solid transparent; border-right: 10px solid transparent;
-            border-bottom: 20px solid #222;
-            position: absolute; top: -18px; left: 26px;
-            transform: rotate(-10deg);
+            width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent;
+            border-bottom: 20px solid #222; position: absolute; top: -18px; left: 26px; transform: rotate(-10deg);
         }
         .cape {
-            position: absolute; left: 5px; top: 10px;
-            width: 30px; height: 15px; background: #333;
-            clip-path: polygon(100% 0, 0 50%, 100% 100%);
-            animation: capeWave 0.5s infinite alternate;
+            position: absolute; left: 5px; top: 10px; width: 30px; height: 15px; background: #333;
+            clip-path: polygon(100% 0, 0 50%, 100% 100%); animation: capeWave 0.5s infinite alternate;
         }
         @keyframes capeWave { from { transform: scaleX(1); } to { transform: scaleX(0.8); } }
-
 
         /* =========================================
            АНИМАЦИИ И ЭФФЕКТЫ
            ========================================= */
-        
-        .laser {
-            position: absolute; height: 4px; border-radius: 4px; opacity: 0; z-index: 1;
-        }
+        .laser { position: absolute; height: 4px; border-radius: 4px; opacity: 0; z-index: 1; }
 
         /* X-Wing Move */
-        .x-wing-wrapper {
-            top: 15%; left: -200px;
-            animation: flyAcrossRight 14s linear infinite;
-        }
+        .x-wing-wrapper { top: 15%; left: -200px; animation: flyAcrossRight 14s linear infinite; }
         .x-wing-wrapper .laser {
-            background: #ff3333; box-shadow: 0 0 10px #ff0000;
-            top: 50%; left: 80%;
+            background: #ff3333; box-shadow: 0 0 10px #ff0000; top: 50%; left: 80%;
             animation: fireLaserRight 14s linear infinite;
         }
 
         /* TIE Fighter Move */
-        .tie-wrapper {
-            top: 20%; left: -400px;
-            animation: flyAcrossRight 14s linear infinite;
-            animation-delay: 0.5s;
-        }
+        .tie-wrapper { top: 20%; left: -400px; animation: flyAcrossRight 14s linear infinite; animation-delay: 0.5s; }
         .tie-wrapper .laser {
-            background: #33ff33; box-shadow: 0 0 10px #00ff00;
-            top: 50%; left: 50%;
-            animation: fireLaserRight 14s linear infinite;
-            animation-delay: 1.0s;
+            background: #33ff33; box-shadow: 0 0 10px #00ff00; top: 50%; left: 50%;
+            animation: fireLaserRight 14s linear infinite; animation-delay: 1.0s;
         }
 
         /* Wizard Move */
-        .wizard-wrapper {
-            top: 60%; right: -200px;
-            /* Летит справа налево */
-            animation: flyWizardChaotic 20s linear infinite;
-            z-index: 35;
-        }
+        .wizard-wrapper { top: 60%; right: -200px; animation: flyWizardChaotic 20s linear infinite; z-index: 35; }
         .spell-bolt {
-            /* Переместили заклинание к "носу" развернутого мага */
-            position: absolute; top: 10px; left: 5px; 
-            width: 10px; height: 10px; background: #fff;
-            border-radius: 50%; box-shadow: 0 0 15px cyan, 0 0 30px violet;
-            opacity: 0;
+            position: absolute; top: 10px; left: 5px; width: 10px; height: 10px; background: #fff;
+            border-radius: 50%; box-shadow: 0 0 15px cyan, 0 0 30px violet; opacity: 0;
             animation: castSpell 20s linear infinite;
         }
 
-        /* KEYFRAMES */
         @keyframes flyAcrossRight {
             0% { transform: translate(0, 0) scale(0.6); }
             50% { transform: translate(60vw, -30px) scale(0.8); }
@@ -213,7 +186,6 @@
         }
 
         @keyframes flyWizardChaotic {
-            /* Полет справа налево */
             0% { right: -200px; top: 80%; transform: rotate(-5deg); }
             25% { right: 20%; top: 20%; transform: rotate(5deg); }
             50% { right: 60%; top: 60%; transform: rotate(-5deg); }
@@ -223,7 +195,6 @@
         @keyframes castSpell {
             0%, 23% { opacity: 0; transform: translate(0,0); }
             25% { opacity: 1; transform: translate(0, 0) scale(1.5); }
-            /* Стреляем влево-вниз (заклинание летит вперед по ходу движения) */
             30% { opacity: 1; transform: translate(-800px, 200px); }
             35% { opacity: 0; }
             100% { opacity: 0; }
@@ -249,13 +220,48 @@
         }
         @keyframes crawl {
             0% { top: 100%; opacity: 1; transform: translateZ(0); }
-            100% { top: -250%; opacity: 0; transform: translateZ(-1000px); }
+            100% { top: -350%; opacity: 0; transform: translateZ(-1000px); }
         }
 
-        @media (max-width: 768px) {
-            #main-container { flex-direction: column; }
-            #canvas-container, #text-container { width: 100%; height: 50%; }
-            .crawl-content { font-size: 1rem; }
+        /* =========================================
+           МОБИЛЬНАЯ АДАПТАЦИЯ (ТЕЛЕФОНЫ)
+           ========================================= */
+        @media (max-width: 900px) {
+            /* Переключаем в колонку: сверху фото, снизу текст */
+            #main-container {
+                flex-direction: column;
+            }
+
+            /* Верхняя половина */
+            #canvas-container {
+                width: 100%;
+                height: 50%;
+                border-bottom: 1px solid #333; /* Разделитель */
+            }
+
+            /* Нижняя половина */
+            #text-container {
+                width: 100%;
+                height: 50%;
+            }
+
+            /* Уменьшаем текст, чтобы влезал */
+            .crawl-content {
+                font-size: 1.1rem;
+                left: 5%; width: 90%;
+            }
+            .title h1 { font-size: 2rem; }
+            .title h2 { font-size: 1.5rem; }
+
+            /* Уменьшаем корабли на телефоне */
+            .ship-wrapper {
+                transform: scale(0.7);
+            }
+            /* Для мага нужно сохранить scaleX(-1) + уменьшение */
+            .wizard-wrapper {
+                transform: scale(0.7); 
+                /* Сам CSS-маг внутри имеет scaleX(-1), поэтому тут просто scale */
+            }
         }
     </style>
     <script type="importmap">
@@ -346,12 +352,22 @@
         const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         scene.background = null; 
+        
+        // Настройка камеры с учетом размера экрана
         const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-        camera.position.set(0, 0, 40);
+        
+        // Если экран узкий (мобилка), отодвигаем камеру дальше, чтобы куб влез
+        if (window.innerWidth < 900) {
+            camera.position.set(0, 0, 55); 
+        } else {
+            camera.position.set(0, 0, 40);
+        }
+
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         container.appendChild(renderer.domElement);
+        
         const light = new THREE.DirectionalLight(0xffffff, 1.5);
         light.position.set(-5, 10, 10); 
         scene.add(light);
@@ -382,27 +398,39 @@
             photoNode.rotation.y += dx * 0.01; photoNode.rotation.x += dy * 0.01;
             lastPos = { x: e.clientX, y: e.clientY };
         });
+        
+        // Сенсорное управление
         container.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) { isDragging = true; lastPos = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
         }, { passive: false });
         window.addEventListener('touchend', () => isDragging = false);
         container.addEventListener('touchmove', (e) => {
-            if (!isDragging) return; e.preventDefault();
+            if (!isDragging) return; 
+            // e.preventDefault() не нужен если стоит touch-action: none в CSS, но оставим для надежности
+            e.preventDefault();
             const touch = e.touches[0]; const dx = touch.clientX - lastPos.x; const dy = touch.clientY - lastPos.y;
             photoNode.rotation.y += dx * 0.01; photoNode.rotation.x += dy * 0.01;
             lastPos = { x: touch.clientX, y: touch.clientY };
         }, { passive: false });
+        
         container.addEventListener('wheel', (e) => {
             e.preventDefault();
             let newZ = camera.position.z + (e.deltaY * 0.05);
             if (newZ < 10) newZ = 10; if (newZ > 100) newZ = 100;
             camera.position.z = newZ;
         }, { passive: false });
+        
         window.addEventListener('resize', () => {
             const newWidth = container.clientWidth; const newHeight = container.clientHeight;
             camera.aspect = newWidth / newHeight; camera.updateProjectionMatrix();
             renderer.setSize(newWidth, newHeight);
+            
+            // Адаптация зума при ресайзе окна (поворот экрана)
+            if (window.innerWidth < 900) {
+                 if(camera.position.z < 50) camera.position.z = 55;
+            }
         });
+        
         function animate() {
             requestAnimationFrame(animate);
             if (!isDragging) photoNode.rotation.y += 0.002;
