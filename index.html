@@ -3,96 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGB Hyper-Modem</title>
+    <title>Zebra Optical Modem</title>
     <style>
-        body { font-family: system-ui, sans-serif; margin: 0; padding: 15px; background: #111; color: white; text-align: center; }
-        .card { max-width: 500px; margin: 0 auto; background: #222; padding: 20px; border-radius: 20px; border: 1px solid #444; }
-        textarea { width: 100%; height: 80px; background: #333; color: #fff; border: 1px solid #555; border-radius: 10px; padding: 10px; box-sizing: border-box; margin: 10px 0; }
-        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; }
-        .btn-send { background: #ff3b30; color: white; }
-        .btn-cam { background: #34c759; color: white; }
-        #flashArea { width: 100%; height: 200px; background: #000; border-radius: 15px; margin-top: 15px; border: 4px solid #333; transition: background-color 0.05s; }
-        video { width: 100%; border-radius: 15px; background: #000; transform: scaleX(-1); }
-        .target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 3px solid #ff3b30; border-radius: 50%; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); }
-        .status { font-size: 14px; color: #aaa; margin-bottom: 10px; }
-        #perceived { width: 40px; height: 40px; border-radius: 50%; margin: 10px auto; border: 2px solid white; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #1a1a1a; color: white; text-align: center; overflow-x: hidden;}
+        .card { max-width: 500px; margin: 0 auto; background: #2c2c2c; padding: 15px; border-radius: 20px; }
+        
+        /* Зона передачи */
+        #transmitter { 
+            display: flex; width: 100%; height: 200px; 
+            border: 4px solid #444; border-radius: 15px; overflow: hidden; margin: 15px 0;
+        }
+        .bit-zone { flex: 1; background: black; transition: background 0.03s; border-right: 1px solid #222;}
+        #syncZone { background: #555; } /* Средняя зона для синхронизации */
+
+        textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; box-sizing: border-box;}
+        button { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0;}
+        .btn-send { background: #007aff; color: white; }
+        .btn-rx { background: #34c759; color: white; }
+
+        /* Зона приема */
+        .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px;}
+        video { width: 100%; border-radius: 15px; background: black; transform: scaleX(-1);}
+        
+        /* Прицел с тремя точками */
+        .target-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center; pointer-events: none;
+        }
+        .point { width: 12px; height: 12px; border: 2px solid red; border-radius: 50%; margin: 0 15%; background: rgba(255,0,0,0.3); }
+        .point.sync { border-color: #00ff00; }
+
+        #rxText { background: #000; color: #0f0; font-family: monospace; }
+        .indicator-group { display: flex; justify-content: center; gap: 20px; margin: 10px 0; }
+        .ind { width: 20px; height: 20px; border: 2px solid white; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div class="status" id="status">RGB MODEM READY</div>
+    <h3>ZEBRA MODEM v2.0</h3>
+    <div id="status">READY</div>
+
+    <textarea id="txText" placeholder="English text...">SPEED</textarea>
+    <button class="btn-send" onclick="transmit()">SEND DATA</button>
     
-    <textarea id="txText" placeholder="English text here...">SPEED</textarea>
-    <button class="btn-send" onclick="transmit()">START RGB BURST</button>
-    <div id="flashArea"></div>
+    <div id="transmitter">
+        <div id="bit0" class="bit-zone"></div>
+        <div id="syncZone" class="bit-zone"></div>
+        <div id="bit1" class="bit-zone"></div>
+    </div>
 
-    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #444;">
-
-    <button class="btn-cam" id="btnCam" onclick="initCamera()">OPEN RECEIVER</button>
+    <button class="btn-rx" id="btnCam" onclick="initCamera()">START RECEIVER</button>
+    
     <div id="rxSection" style="display:none;">
-        <div style="position:relative; line-height: 0;">
+        <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
-            <div class="target"></div>
+            <div class="target-overlay">
+                <div class="point"></div>
+                <div class="point sync"></div>
+                <div class="point"></div>
+            </div>
         </div>
-        <div id="perceived"></div>
-        <textarea id="rxText" readonly placeholder="Decoded text..."></textarea>
+        <div class="indicator-group">
+            <div id="ind0" class="ind"></div>
+            <div id="indSync" class="ind"></div>
+            <div id="ind1" class="ind"></div>
+        </div>
+        <input type="range" id="threshold" min="0" max="255" value="128" style="width:100%">
+        <textarea id="rxText" readonly></textarea>
     </div>
 </div>
 
 <script>
-    // Настройки скорости (100мс - очень быстро для камеры, 150мс - надежно)
-    const FRAME_TIME = 120; 
-    
-    // Палитра: 8 цветов (3 бита на цвет)
-    const PALETTE = [
-        [0,0,0],       // 000 (Black)
-        [255,0,0],     // 001 (Red)
-        [0,255,0],     // 010 (Green)
-        [0,0,255],     // 011 (Blue)
-        [255,255,0],   // 100 (Yellow)
-        [255,0,255],   // 101 (Magenta)
-        [0,255,255],   // 110 (Cyan)
-        [255,255,255]  // 111 (White)
-    ];
+    const CLOCK_SPEED = 120; // Скорость одного такта в мс
+    let syncState = false;
 
-    function rgbToHex(rgb) {
-        return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-    }
-
-    // Передача
+    // --- ПЕРЕДАЧА ---
     async function transmit() {
         const text = document.getElementById('txText').value;
-        const area = document.getElementById('flashArea');
-        const status = document.getElementById('status');
+        const b0 = document.getElementById('bit0');
+        const b1 = document.getElementById('bit1');
+        const sZ = document.getElementById('syncZone');
         
-        // 1. Конвертируем текст в поток бит
-        let bitStream = "";
+        // Переводим текст в биты
+        let bits = "";
         for (let char of text) {
-            bitStream += char.charCodeAt(0).toString(2).padStart(9, '0'); // 9 бит на символ для кратности 3
+            bits += char.charCodeAt(0).toString(2).padStart(8, '0');
+        }
+        if (bits.length % 2 !== 0) bits += "0"; // Дополняем до четного
+
+        document.getElementById('status').innerText = "TRANSMITTING...";
+        
+        // Стартовый сигнал (всё белое на 500мс)
+        b0.style.background = b1.style.background = sZ.style.background = 'white';
+        await new Promise(r => setTimeout(r, 600));
+
+        for (let i = 0; i < bits.length; i += 2) {
+            const bitPair = bits.substring(i, i + 2);
+            
+            // Устанавливаем данные
+            b0.style.background = bitPair[0] === '1' ? 'white' : 'black';
+            b1.style.background = bitPair[1] === '1' ? 'white' : 'black';
+            
+            // Инвертируем синхро-зону (Clock)
+            syncState = !syncState;
+            sZ.style.background = syncState ? 'white' : 'black';
+            
+            await new Promise(r => setTimeout(r, CLOCK_SPEED));
         }
 
-        status.innerText = "CALIBRATING...";
-        // Преамбула для настройки экспозиции камеры (Белый-Черный-Белый)
-        for (let c of [7, 0, 7, 0]) {
-            area.style.backgroundColor = rgbToHex(PALETTE[c]);
-            await new Promise(r => setTimeout(r, 400));
-        }
-
-        status.innerText = "SENDING RGB BURST...";
-        // 2. Группируем по 3 бита и сопоставляем с цветом
-        for (let i = 0; i < bitStream.length; i += 3) {
-            let chunk = bitStream.substring(i, i + 3).padEnd(3, '0');
-            let colorIndex = parseInt(chunk, 2);
-            area.style.backgroundColor = rgbToHex(PALETTE[colorIndex]);
-            await new Promise(r => setTimeout(r, FRAME_TIME));
-        }
-
-        area.style.backgroundColor = 'black';
-        status.innerText = "FINISHED";
+        b0.style.background = b1.style.background = sZ.style.background = 'black';
+        document.getElementById('status').innerText = "FINISHED";
     }
 
-    // Прием
+    // --- ПРИЕМ ---
     async function initCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -100,63 +124,62 @@
             video.srcObject = stream;
             video.play();
             document.getElementById('rxSection').style.display = 'block';
+            document.getElementById('vWrap').style.display = 'block';
             document.getElementById('btnCam').style.display = 'none';
-            decodeLoop();
-        } catch (e) { alert("Camera error"); }
+            decode();
+        } catch (e) { alert("Camera access denied"); }
     }
 
-    function decodeLoop() {
+    function decode() {
         const video = document.getElementById('video');
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const rxText = document.getElementById('rxText');
         
-        let lastColorIndex = -1;
+        let lastSyncVal = -1;
         let bitBuffer = "";
-        let isReading = false;
-        let lastSampleTime = 0;
 
-        const process = () => {
+        const tick = () => {
             if (video.readyState === 4) {
                 canvas.width = 100; canvas.height = 100;
-                ctx.drawImage(video, video.videoWidth/2-10, video.videoHeight/2-10, 20, 20, 0, 0, 100, 100);
-                const data = ctx.getImageData(50, 50, 1, 1).data;
-                const r = data[0], g = data[1], b = data[2];
+                // Кропаем центр видео
+                ctx.drawImage(video, video.videoWidth*0.2, video.videoHeight*0.4, video.videoWidth*0.6, video.videoHeight*0.2, 0, 0, 100, 100);
                 
-                // Находим ближайший цвет из палитры по Евклидову расстоянию
-                let minDist = Infinity;
-                let colorIndex = 0;
-                PALETTE.forEach((c, i) => {
-                    let d = Math.sqrt((r-c[0])**2 + (g-c[1])**2 + (b-c[2])**2);
-                    if (d < minDist) { minDist = d; colorIndex = i; }
-                });
-
-                document.getElementById('perceived').style.backgroundColor = rgbToHex(PALETTE[colorIndex]);
-
-                const now = performance.now();
+                const thresh = document.getElementById('threshold').value;
                 
-                // Простая логика: если цвет изменился и прошло достаточно времени
-                if (colorIndex !== lastColorIndex && (now - lastSampleTime > FRAME_TIME * 0.8)) {
-                    // Игнорируем черный в покое
-                    if (colorIndex !== 0 || isReading) {
-                        isReading = true;
-                        let bits = colorIndex.toString(2).padStart(3, '0');
-                        bitBuffer += bits;
-                        
-                        if (bitBuffer.length >= 9) {
-                            let charBits = bitBuffer.substring(0, 9);
-                            let code = parseInt(charBits, 2);
-                            if (code > 0) rxText.value += String.fromCharCode(code);
-                            bitBuffer = bitBuffer.substring(9);
+                // Читаем 3 точки (на 20%, 50% и 80% ширины кропа)
+                const getB = (x) => {
+                    const d = ctx.getImageData(x, 50, 1, 1).data;
+                    const b = (d[0] + d[1] + d[2]) / 3;
+                    return b > thresh ? 1 : 0;
+                };
+
+                const b0 = getB(20);
+                const bSync = getB(50);
+                const b1 = getB(80);
+
+                // Визуализация
+                document.getElementById('ind0').style.background = b0 ? 'white' : 'black';
+                document.getElementById('indSync').style.background = bSync ? 'white' : 'black';
+                document.getElementById('ind1').style.background = b1 ? 'white' : 'black';
+
+                // Если значение синхро-зоны изменилось — считываем данные
+                if (lastSyncVal !== -1 && bSync !== lastSyncVal) {
+                    bitBuffer += b0.toString() + b1.toString();
+                    
+                    if (bitBuffer.length >= 8) {
+                        const charCode = parseInt(bitBuffer.substring(0, 8), 2);
+                        if (charCode > 31 && charCode < 127) {
+                            rxText.value += String.fromCharCode(charCode);
                         }
-                        lastSampleTime = now;
+                        bitBuffer = bitBuffer.substring(8);
                     }
                 }
-                lastColorIndex = colorIndex;
+                lastSyncVal = bSync;
             }
-            requestAnimationFrame(process);
+            requestAnimationFrame(tick);
         };
-        process();
+        tick();
     }
 </script>
 </body>
