@@ -3,101 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Modem v3.2 - Locked</title>
+    <title>Parallel Optical Modem v4.0</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
-        .card { max-width: 500px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
-        #transmitter { display: flex; width: 100%; height: 200px; border: 3px solid #444; border-radius: 15px; overflow: hidden; margin: 15px 0; background: #000; }
-        .zone { flex: 1; transition: background 0.05s; }
-        #zS { border-left: 2px solid #000; border-right: 2px solid #000; }
+        .card { max-width: 800px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
+        
+        /* Шина передачи данных - 9 полос */
+        #transmitter { 
+            display: flex; width: 100%; height: 250px; 
+            border: 3px solid #444; border-radius: 12px; overflow: hidden; margin: 15px 0; background: #000;
+        }
+        .zone { flex: 1; border-right: 1px solid #111; transition: background 0.05s; }
+        #zS { border-left: 3px solid #000; border-right: 3px solid #000; background: #222; } /* Центр */
+
         textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; background: #222; color: #fff; font-size: 18px; }
         button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 18px; background: #007aff; color: #fff; }
+        
         .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px; border-radius: 15px; overflow: hidden; }
         video { width: 100%; background: #000; }
-        .target-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-around; pointer-events: none; }
-        .dot { width: 20px; height: 20px; border: 3px solid red; border-radius: 50%; background: rgba(255,0,0,0.2); }
-        .dot.sync { border-color: #0f0; }
-        #rxText { background: #000; color: #0f0; font-family: monospace; height: 120px; width: 100%; margin-top: 10px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; }
-        .ind-box { display: flex; justify-content: space-around; margin: 10px 0; }
-        .ind { width: 40px; height: 40px; border: 2px solid #333; border-radius: 8px; }
-        .stats { font-size: 12px; color: #666; margin-top: 5px; background: #222; padding: 5px; border-radius: 5px; }
+        
+        /* Прицел на 9 точек */
+        .target-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: space-between; pointer-events: none;
+            padding: 0 2%; box-sizing: border-box;
+        }
+        .dot { width: 12px; height: 12px; border: 2px solid red; border-radius: 50%; background: rgba(255,0,0,0.3); }
+        .dot.sync { border-color: #0f0; width: 18px; height: 18px; }
+
+        #rxText { background: #000; color: #0f0; font-family: monospace; height: 120px; width: 100%; margin-top: 10px; border-radius: 10px; padding: 10px; font-size: 20px; border: 1px solid #333; }
+        
+        /* Индикаторы мониторинга */
+        .ind-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 0 2%; }
+        .ind { width: 18px; height: 18px; border: 1px solid #333; border-radius: 3px; background: #000; }
+        .ind.s { border-color: #0f0; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="status" style="color: #007aff; font-weight: bold; margin-bottom: 5px;">СИСТЕМА ГОТОВА</div>
+    <div id="status" style="color: #007aff; font-weight: bold; margin-bottom: 5px;">PARALLEL BUS READY</div>
 
-    <textarea id="txText">HELLO WORLD</textarea>
-    <button onclick="transmit()">ОТПРАВИТЬ СИГНАЛ</button>
+    <textarea id="txText">HELLO</textarea>
+    <button onclick="transmit()">ОТПРАВИТЬ (1 БАЙТ / ТАКТ)</button>
     
     <div id="transmitter">
-        <div id="zL" class="zone"></div>
+        <div id="z0" class="zone"></div><div id="z1" class="zone"></div><div id="z2" class="zone"></div><div id="z3" class="zone"></div>
         <div id="zS" class="zone"></div>
-        <div id="zR" class="zone"></div>
+        <div id="z4" class="zone"></div><div id="z5" class="zone"></div><div id="z6" class="zone"></div><div id="z7" class="zone"></div>
     </div>
 
-    <button style="background: #34c759;" id="btnCam" onclick="initCamera()">ОТКРЫТЬ ПРИЕМНИК</button>
+    <button style="background: #34c759;" id="btnCam" onclick="initCamera()">ВКЛЮЧИТЬ СКАНЕР</button>
     
     <div id="rxSection" style="display:none;">
         <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
-            <div class="target-overlay"><div class="dot"></div><div class="dot sync"></div><div class="dot"></div></div>
+            <div class="target-overlay">
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                <div class="dot sync"></div>
+                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            </div>
         </div>
         
-        <div class="ind-box">
-            <div id="indL" class="ind"></div><div id="indS" class="ind"></div><div id="indR" class="ind"></div>
+        <div class="ind-row">
+            <div id="i0" class="ind"></div><div id="i1" class="ind"></div><div id="i2" class="ind"></div><div id="i3" class="ind"></div>
+            <div id="iS" class="ind s"></div>
+            <div id="i4" class="ind"></div><div id="i5" class="ind"></div><div id="i6" class="ind"></div><div id="i7" class="ind"></div>
         </div>
 
-        <div class="stats">
-            Порог: <span id="curThresh">---</span> | Режим: <span id="curMode">Ожидание</span>
+        <div style="font-size: 11px; color: #555;">
+            Порог: <span id="curThresh">---</span> | Состояние: <span id="curMode">IDLE</span>
         </div>
         
         <textarea id="rxText" readonly placeholder="Тут появится текст..."></textarea>
-        <button onclick="location.reload()" style="background:#444; font-size: 14px; margin-top: 5px;">Сброс системы</button>
+        <button onclick="location.reload()" style="background:#333; font-size: 14px; padding: 10px;">Сброс</button>
     </div>
 </div>
 
 <script>
-    const TICK_MS = 400; // Увеличили для надежности
+    const TICK_MS = 450; // Немного увеличили, так как 9 зон требуют стабильности
     let lockedThreshold = 130;
-    let isCalibrated = false;
 
     // --- TRANSMITTER ---
     async function transmit() {
         const text = document.getElementById('txText').value;
-        const zL = document.getElementById('zL'), zS = document.getElementById('zS'), zR = document.getElementById('zR');
+        const zones = [0,1,2,3,4,5,6,7].map(i => document.getElementById('z'+i));
+        const sZone = document.getElementById('zS');
         const status = document.getElementById('status');
-        
-        let bits = "";
-        for (let char of text) bits += char.charCodeAt(0).toString(2).padStart(8, '0');
 
-        status.innerText = "КАЛИБРОВКА (НЕ ДВИГАЙТЕ)...";
-        // 1. ПРЕАМБУЛА
-        zL.style.background = zS.style.background = zR.style.background = "black";
-        await new Promise(r => setTimeout(r, 800));
-        zL.style.background = zS.style.background = zR.style.background = "white"; // Сигнал для начала калибровки
+        status.innerText = "КАЛИБРОВКА...";
+        // Преамбула (все белое)
+        [...zones, sZone].forEach(z => z.style.background = "white");
         await new Promise(r => setTimeout(r, 1200));
-        zL.style.background = zS.style.background = zR.style.background = "black"; // Сигнал конца калибровки
+        [...zones, sZone].forEach(z => z.style.background = "black");
         await new Promise(r => setTimeout(r, 800));
 
-        status.innerText = "ИДЕТ ПЕРЕДАЧА...";
-        for (let i = 0; i < bits.length; i += 2) {
-            const b0 = bits[i], b1 = bits[i+1];
-            
-            // Sync OFF
-            zS.style.background = "black";
-            zL.style.background = b0 === '1' ? "white" : "black";
-            zR.style.background = b1 === '1' ? "white" : "black";
+        status.innerText = "ПЕРЕДАЧА ДАННЫХ...";
+        for (let char of text) {
+            const code = char.charCodeAt(0);
+            const bits = code.toString(2).padStart(8, '0'); // Напр. "01001000"
+
+            // 1. Ставим данные (Sync OFF)
+            sZone.style.background = "black";
+            for(let j=0; j<8; j++) {
+                zones[j].style.background = bits[j] === '1' ? "white" : "black";
+            }
             await new Promise(r => setTimeout(r, TICK_MS));
 
-            // Sync ON
-            zS.style.background = "white";
+            // 2. Сигнал считывания (Sync ON)
+            sZone.style.background = "white";
             await new Promise(r => setTimeout(r, TICK_MS));
         }
 
-        zL.style.background = zS.style.background = zR.style.background = "black";
-        status.innerText = "ПЕРЕДАЧА ЗАВЕРШЕНА";
+        [...zones, sZone].forEach(z => z.style.background = "black");
+        status.innerText = "ЗАВЕРШЕНО";
     }
 
     // --- RECEIVER ---
@@ -120,77 +139,63 @@
         const rxText = document.getElementById('rxText');
         const modeDisp = document.getElementById('curMode');
         
-        let bitBuffer = "";
         let waitingForRisingEdge = true;
-        
+        let rxState = "IDLE"; 
         let calibMin = 255, calibMax = 0;
-        let rxState = "IDLE"; // IDLE, CALIBRATING, RECEIVING
 
         const loop = () => {
             if (video.readyState === 4) {
                 canvas.width = 100; canvas.height = 100;
-                ctx.drawImage(video, 0, video.videoHeight*0.45, video.videoWidth, video.videoHeight*0.1, 0, 0, 100, 100);
+                // Кропаем центральную линию
+                ctx.drawImage(video, 0, video.videoHeight*0.48, video.videoWidth, video.videoHeight*0.04, 0, 0, 100, 100);
                 
                 const getLum = (x) => {
                     const d = ctx.getImageData(x, 50, 1, 1).data;
                     return (d[0]+d[1]+d[2])/3;
                 };
 
-                const lumL = getLum(15), lumS = getLum(50), lumR = getLum(85);
+                // Точки съема (распределены равномерно)
+                const samples = [6, 17, 28, 39, 50, 61, 72, 83, 94].map(x => getLum(x));
+                const lumS = samples[4]; // Центр
 
-                // --- АВТОМАТ СОСТОЯНИЙ ---
                 if (rxState === "IDLE") {
-                    modeDisp.innerText = "Ожидание сигнала...";
-                    modeDisp.style.color = "#666";
-                    // Если вдруг стало очень ярко — начинаем калибровку
-                    if (lumL > 180 && lumS > 180 && lumR > 180) {
+                    if (samples.every(v => v > 200)) {
                         rxState = "CALIBRATING";
                         calibMax = 0; calibMin = 255;
-                        bitBuffer = "";
                     }
                 } 
                 else if (rxState === "CALIBRATING") {
-                    modeDisp.innerText = "Калибровка...";
-                    modeDisp.style.color = "#ffcc00";
                     if (lumS > calibMax) calibMax = lumS;
                     if (lumS < calibMin) calibMin = lumS;
-
-                    // Если сигнал пропал (стало темно) — калибровка окончена
-                    if (lumL < 50 && lumS < 50 && lumR < 50 && calibMax > 150) {
+                    if (samples.every(v => v < 60) && calibMax > 150) {
                         lockedThreshold = (calibMin + calibMax) / 2;
                         document.getElementById('curThresh').innerText = Math.round(lockedThreshold);
                         rxState = "RECEIVING";
                     }
                 }
                 else if (rxState === "RECEIVING") {
-                    modeDisp.innerText = "Прием данных";
-                    modeDisp.style.color = "#34c759";
-
-                    const L = lumL > lockedThreshold ? 1 : 0;
-                    const S = lumS > lockedThreshold ? 1 : 0;
-                    const R = lumR > lockedThreshold ? 1 : 0;
-
-                    document.getElementById('indL').style.background = L ? "white" : "black";
-                    document.getElementById('indS').style.background = S ? "white" : "black";
-                    document.getElementById('indR').style.background = R ? "white" : "black";
+                    const bits = samples.map(v => v > lockedThreshold ? 1 : 0);
+                    
+                    // Индикаторы
+                    bits.forEach((b, i) => {
+                        const id = i === 4 ? 'iS' : 'i' + (i < 4 ? i : i - 1);
+                        document.getElementById(id).style.background = b ? "white" : "black";
+                    });
 
                     if (waitingForRisingEdge) {
-                        if (S === 1) {
-                            bitBuffer += L.toString() + R.toString();
+                        if (bits[4] === 1) { // SYNC поднялся
+                            // Собираем байт: [0,1,2,3] + [5,6,7,8]
+                            const byteBits = bits.filter((_, i) => i !== 4).join('');
+                            const code = parseInt(byteBits, 2);
+                            if (code >= 32 && code <= 126) rxText.value += String.fromCharCode(code);
+                            
                             waitingForRisingEdge = false;
-                            if (bitBuffer.length >= 8) {
-                                const code = parseInt(bitBuffer.substring(0, 8), 2);
-                                if (code >= 32 && code <= 126) rxText.value += String.fromCharCode(code);
-                                bitBuffer = bitBuffer.substring(8);
-                            }
                         }
                     } else {
-                        if (S === 0) waitingForRisingEdge = true;
+                        if (bits[4] === 0) waitingForRisingEdge = true;
                     }
-
-                    // Если очень долго темно (например, 5 секунд) — возвращаемся в IDLE
-                    // (Опционально, для этого кода пока не критично)
                 }
+                modeDisp.innerText = rxState;
             }
             requestAnimationFrame(loop);
         };
