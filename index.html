@@ -3,79 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zebra Optical Modem</title>
+    <title>Zebra Modem - No Mirror</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 10px; background: #1a1a1a; color: white; text-align: center; overflow-x: hidden;}
-        .card { max-width: 500px; margin: 0 auto; background: #2c2c2c; padding: 15px; border-radius: 20px; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #1a1a1a; color: white; text-align: center; }
+        .card { max-width: 500px; margin: 0 auto; background: #2c2c2c; padding: 15px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         
         /* Зона передачи */
         #transmitter { 
             display: flex; width: 100%; height: 200px; 
             border: 4px solid #444; border-radius: 15px; overflow: hidden; margin: 15px 0;
         }
-        .bit-zone { flex: 1; background: black; transition: background 0.03s; border-right: 1px solid #222;}
-        #syncZone { background: #555; } /* Средняя зона для синхронизации */
+        .bit-zone { 
+            flex: 1; background: black; display: flex; align-items: center; 
+            justify-content: center; font-weight: bold; color: #444; font-size: 24px;
+        }
+        #syncZone { background: #333; border-left: 2px solid #222; border-right: 2px solid #222; }
 
-        textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; box-sizing: border-box;}
-        button { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0;}
+        textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; box-sizing: border-box; font-size: 16px;}
+        button { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px;}
         .btn-send { background: #007aff; color: white; }
         .btn-rx { background: #34c759; color: white; }
 
         /* Зона приема */
-        .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px;}
-        video { width: 100%; border-radius: 15px; background: black; transform: scaleX(-1);}
+        .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px; line-height: 0;}
+        /* УБРАЛИ scaleX(-1), теперь камера показывает как есть */
+        video { width: 100%; border-radius: 15px; background: black; }
         
-        /* Прицел с тремя точками */
         .target-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center; pointer-events: none;
+            display: flex; align-items: center; justify-content: space-around; pointer-events: none;
         }
-        .point { width: 12px; height: 12px; border: 2px solid red; border-radius: 50%; margin: 0 15%; background: rgba(255,0,0,0.3); }
-        .point.sync { border-color: #00ff00; }
+        .point { 
+            width: 20px; height: 20px; border: 2px solid red; border-radius: 50%; 
+            background: rgba(255,0,0,0.3); display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 10px; font-weight: bold;
+        }
+        .point.sync { border-color: #00ff00; background: rgba(0,255,0,0.2); }
 
-        #rxText { background: #000; color: #0f0; font-family: monospace; }
+        #rxText { background: #000; color: #0f0; font-family: monospace; height: 80px; width: 100%; margin-top: 10px; border-radius: 8px; padding: 10px; box-sizing: border-box;}
         .indicator-group { display: flex; justify-content: center; gap: 20px; margin: 10px 0; }
-        .ind { width: 20px; height: 20px; border: 2px solid white; border-radius: 4px; }
+        .ind { width: 30px; height: 30px; border: 2px solid white; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px;}
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h3>ZEBRA MODEM v2.0</h3>
-    <div id="status">READY</div>
+    <div id="status" style="font-size: 12px; color: #888;">ZEBRA MODEM v2.1</div>
 
-    <textarea id="txText" placeholder="English text...">SPEED</textarea>
-    <button class="btn-send" onclick="transmit()">SEND DATA</button>
+    <textarea id="txText" placeholder="English text...">READY</textarea>
+    <button class="btn-send" onclick="transmit()">ОТПРАВИТЬ ДАННЫЕ</button>
     
     <div id="transmitter">
-        <div id="bit0" class="bit-zone"></div>
-        <div id="syncZone" class="bit-zone"></div>
-        <div id="bit1" class="bit-zone"></div>
+        <div id="bit0" class="bit-zone">L</div>
+        <div id="syncZone" class="bit-zone">S</div>
+        <div id="bit1" class="bit-zone">R</div>
     </div>
 
-    <button class="btn-rx" id="btnCam" onclick="initCamera()">START RECEIVER</button>
+    <button class="btn-rx" id="btnCam" onclick="initCamera()">ВКЛЮЧИТЬ ПРИЕМНИК</button>
     
     <div id="rxSection" style="display:none;">
         <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
             <div class="target-overlay">
-                <div class="point"></div>
-                <div class="point sync"></div>
-                <div class="point"></div>
+                <div class="point">L</div>
+                <div class="point sync">S</div>
+                <div class="point">R</div>
             </div>
         </div>
         <div class="indicator-group">
-            <div id="ind0" class="ind"></div>
-            <div id="indSync" class="ind"></div>
-            <div id="ind1" class="ind"></div>
+            <div id="ind0" class="ind">L</div>
+            <div id="indSync" class="ind">S</div>
+            <div id="ind1" class="ind">R</div>
         </div>
-        <input type="range" id="threshold" min="0" max="255" value="128" style="width:100%">
-        <textarea id="rxText" readonly></textarea>
+        <p style="font-size: 12px; margin: 5px 0;">Порог яркости (настрой под освещение):</p>
+        <input type="range" id="threshold" min="0" max="255" value="120" style="width:100%">
+        <textarea id="rxText" readonly placeholder="Тут появится текст..."></textarea>
     </div>
 </div>
 
 <script>
-    const CLOCK_SPEED = 120; // Скорость одного такта в мс
+    const CLOCK_SPEED = 150; // Умеренная скорость для надежности IPS
     let syncState = false;
 
     // --- ПЕРЕДАЧА ---
@@ -85,27 +92,24 @@
         const b1 = document.getElementById('bit1');
         const sZ = document.getElementById('syncZone');
         
-        // Переводим текст в биты
         let bits = "";
         for (let char of text) {
             bits += char.charCodeAt(0).toString(2).padStart(8, '0');
         }
-        if (bits.length % 2 !== 0) bits += "0"; // Дополняем до четного
+        if (bits.length % 2 !== 0) bits += "00"; 
 
-        document.getElementById('status').innerText = "TRANSMITTING...";
+        document.getElementById('status').innerText = "ПЕРЕДАЧА...";
         
-        // Стартовый сигнал (всё белое на 500мс)
+        // Стартовый импульс
         b0.style.background = b1.style.background = sZ.style.background = 'white';
-        await new Promise(r => setTimeout(r, 600));
+        await new Promise(r => setTimeout(r, 800));
 
         for (let i = 0; i < bits.length; i += 2) {
             const bitPair = bits.substring(i, i + 2);
             
-            // Устанавливаем данные
             b0.style.background = bitPair[0] === '1' ? 'white' : 'black';
             b1.style.background = bitPair[1] === '1' ? 'white' : 'black';
             
-            // Инвертируем синхро-зону (Clock)
             syncState = !syncState;
             sZ.style.background = syncState ? 'white' : 'black';
             
@@ -113,7 +117,7 @@
         }
 
         b0.style.background = b1.style.background = sZ.style.background = 'black';
-        document.getElementById('status').innerText = "FINISHED";
+        document.getElementById('status').innerText = "ЗАВЕРШЕНО";
     }
 
     // --- ПРИЕМ ---
@@ -127,7 +131,7 @@
             document.getElementById('vWrap').style.display = 'block';
             document.getElementById('btnCam').style.display = 'none';
             decode();
-        } catch (e) { alert("Camera access denied"); }
+        } catch (e) { alert("Нет доступа к камере!"); }
     }
 
     function decode() {
@@ -142,40 +146,44 @@
         const tick = () => {
             if (video.readyState === 4) {
                 canvas.width = 100; canvas.height = 100;
-                // Кропаем центр видео
-                ctx.drawImage(video, video.videoWidth*0.2, video.videoHeight*0.4, video.videoWidth*0.6, video.videoHeight*0.2, 0, 0, 100, 100);
+                // Кропаем видео для анализа (горизонтальная полоска в центре)
+                ctx.drawImage(video, 0, video.videoHeight*0.4, video.videoWidth, video.videoHeight*0.2, 0, 0, 100, 100);
                 
                 const thresh = document.getElementById('threshold').value;
                 
-                // Читаем 3 точки (на 20%, 50% и 80% ширины кропа)
                 const getB = (x) => {
                     const d = ctx.getImageData(x, 50, 1, 1).data;
                     const b = (d[0] + d[1] + d[2]) / 3;
                     return b > thresh ? 1 : 0;
                 };
 
-                const b0 = getB(20);
-                const bSync = getB(50);
-                const b1 = getB(80);
+                // Читаем значения в точках (20%, 50%, 80%)
+                const bL = getB(20);
+                const bS = getB(50);
+                const bR = getB(80);
 
-                // Визуализация
-                document.getElementById('ind0').style.background = b0 ? 'white' : 'black';
-                document.getElementById('indSync').style.background = bSync ? 'white' : 'black';
-                document.getElementById('ind1').style.background = b1 ? 'white' : 'black';
+                // Визуализация индикаторов
+                document.getElementById('ind0').style.background = bL ? 'white' : 'black';
+                document.getElementById('ind0').style.color = bL ? 'black' : 'white';
+                document.getElementById('indSync').style.background = bS ? 'white' : 'black';
+                document.getElementById('indSync').style.color = bS ? 'black' : 'white';
+                document.getElementById('ind1').style.background = bR ? 'white' : 'black';
+                document.getElementById('ind1').style.color = bR ? 'black' : 'white';
 
-                // Если значение синхро-зоны изменилось — считываем данные
-                if (lastSyncVal !== -1 && bSync !== lastSyncVal) {
-                    bitBuffer += b0.toString() + b1.toString();
+                // Детекция изменения синхро-сигнала
+                if (lastSyncVal !== -1 && bS !== lastSyncVal) {
+                    // Теперь bL - это всегда левая сторона кадра, bR - правая
+                    bitBuffer += bL.toString() + bR.toString();
                     
                     if (bitBuffer.length >= 8) {
                         const charCode = parseInt(bitBuffer.substring(0, 8), 2);
-                        if (charCode > 31 && charCode < 127) {
+                        if (charCode >= 32 && charCode <= 126) {
                             rxText.value += String.fromCharCode(charCode);
                         }
                         bitBuffer = bitBuffer.substring(8);
                     }
                 }
-                lastSyncVal = bSync;
+                lastSyncVal = bS;
             }
             requestAnimationFrame(tick);
         };
