@@ -3,43 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Modem - Rock Solid</title>
+    <title>Optical Modem v3.1</title>
     <style>
         body { font-family: sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
-        .card { max-width: 500px; margin: 0 auto; background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; }
-        
-        #transmitter { 
-            display: flex; width: 100%; height: 250px; 
-            border: 4px solid #444; border-radius: 15px; overflow: hidden; margin: 20px 0;
-        }
-        .zone { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; color: #222; }
-        #syncZone { border-left: 2px solid #000; border-right: 2px solid #000; }
-
+        .card { max-width: 500px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
+        #transmitter { display: flex; width: 100%; height: 200px; border: 3px solid #444; border-radius: 15px; overflow: hidden; margin: 15px 0; background: #000; }
+        .zone { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; color: #222; }
+        #zS { border-left: 2px solid #000; border-right: 2px solid #000; }
         textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; background: #222; color: #fff; font-size: 18px; }
         button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 18px; background: #007aff; color: #fff; }
-        
-        .video-wrap { position: relative; width: 100%; display: none; margin-top: 15px; border-radius: 15px; overflow: hidden; }
+        .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px; border-radius: 15px; overflow: hidden; }
         video { width: 100%; background: #000; }
-        
-        .target-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: space-around; pointer-events: none;
-        }
-        .dot { width: 25px; height: 25px; border: 3px solid red; border-radius: 50%; background: rgba(255,0,0,0.2); color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .target-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-around; pointer-events: none; }
+        .dot { width: 20px; height: 20px; border: 3px solid red; border-radius: 50%; background: rgba(255,0,0,0.2); }
         .dot.sync { border-color: #0f0; }
-
-        #rxText { background: #000; color: #0f0; font-family: monospace; height: 100px; width: 100%; margin-top: 15px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; }
+        #rxText { background: #000; color: #0f0; font-family: monospace; height: 100px; width: 100%; margin-top: 10px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; }
         .ind-box { display: flex; justify-content: space-around; margin: 10px 0; }
         .ind { width: 40px; height: 40px; border: 2px solid #333; border-radius: 8px; }
+        .stats { font-size: 12px; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="status" style="color: #555; font-size: 12px;">MODEM v3.0 (STABLE)</div>
+    <div id="status" style="color: #007aff; font-weight: bold; margin-bottom: 10px;">ГОТОВ</div>
 
-    <textarea id="txText">HELLO</textarea>
-    <button onclick="transmit()">ОТПРАВИТЬ СИГНАЛ</button>
+    <textarea id="txText">HELLO WORLD</textarea>
+    <button onclick="transmit()">ОТПРАВИТЬ (С АВТОКАЛИБРОВКОЙ)</button>
     
     <div id="transmitter">
         <div id="zL" class="zone">L</div>
@@ -52,61 +42,67 @@
     <div id="rxSection" style="display:none;">
         <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
-            <div class="target-overlay">
-                <div class="dot">L</div>
-                <div class="dot sync">S</div>
-                <div class="dot">R</div>
-            </div>
+            <div class="target-overlay"><div class="dot"></div><div class="dot sync"></div><div class="dot"></div></div>
         </div>
         
         <div class="ind-box">
-            <div id="indL" class="ind"></div>
-            <div id="indS" class="ind"></div>
-            <div id="indR" class="ind"></div>
+            <div id="indL" class="ind"></div><div id="indS" class="ind"></div><div id="indR" class="ind"></div>
         </div>
 
-        <p style="font-size: 12px; color: #888;">Порог яркости: <span id="tVal">130</span></p>
-        <input type="range" id="threshold" min="0" max="255" value="130" style="width:100%" oninput="document.getElementById('tVal').innerText=this.value">
+        <div class="stats">
+            Порог: <span id="curThresh">???</span> | Биты: <span id="bitCount">0</span>
+        </div>
         
-        <textarea id="rxText" readonly placeholder="Здесь будет текст..."></textarea>
-        <button onclick="document.getElementById('rxText').value=''" style="background:#333; font-size: 14px;">Очистить</button>
+        <textarea id="rxText" readonly placeholder="Результат..."></textarea>
+        <button onclick="document.getElementById('rxText').value=''; document.getElementById('bitCount').innerText='0';" style="background:#333; font-size: 14px;">Очистить лог</button>
     </div>
 </div>
 
 <script>
-    const TICK_MS = 400; // Медленно и уверенно
-    
+    const TICK_MS = 350; 
+    let autoThreshold = 130;
+
     async function transmit() {
         const text = document.getElementById('txText').value;
         const zL = document.getElementById('zL'), zS = document.getElementById('zS'), zR = document.getElementById('zR');
+        const status = document.getElementById('status');
         
         let bits = "";
         for (let char of text) bits += char.charCodeAt(0).toString(2).padStart(8, '0');
 
-        document.getElementById('status').innerText = "КАЛИБРОВКА...";
-        // Преамбула: Все черное -> Все белое (сброс приемника)
+        // --- ФАЗА 1: АВТОКАЛИБРОВКА ---
+        status.innerText = "КАЛИБРОВКА...";
         zL.style.background = zS.style.background = zR.style.background = "black";
         await new Promise(r => setTimeout(r, 600));
         zL.style.background = zS.style.background = zR.style.background = "white";
         await new Promise(r => setTimeout(r, 1000));
+        zL.style.background = zS.style.background = zR.style.background = "black";
+        await new Promise(r => setTimeout(r, 600));
 
-        document.getElementById('status').innerText = "ПЕРЕДАЧА...";
+        // --- ФАЗА 2: ПЕРЕДАЧА ---
+        status.innerText = "ПЕРЕДАЧА...";
         for (let i = 0; i < bits.length; i += 2) {
             const b0 = bits[i], b1 = bits[i+1];
             
-            // 1. Ставим данные при ЧЕРНОЙ синхронизации
+            // Шаг 1: Подготовка данных (Sync = Black)
             zS.style.background = "black";
             zL.style.background = b0 === '1' ? "white" : "black";
             zR.style.background = b1 === '1' ? "white" : "black";
             await new Promise(r => setTimeout(r, TICK_MS));
 
-            // 2. Включаем БЕЛУЮ синхронизацию (сигнал для чтения)
+            // Шаг 2: Сигнал считывания (Sync = White)
             zS.style.background = "white";
             await new Promise(r => setTimeout(r, TICK_MS));
+
+            // Небольшая пауза после каждой буквы (каждые 8 бит)
+            if ((i + 2) % 8 === 0) {
+                zS.style.background = "black";
+                await new Promise(r => setTimeout(r, 100));
+            }
         }
 
         zL.style.background = zS.style.background = zR.style.background = "black";
-        document.getElementById('status').innerText = "ГОТОВО";
+        status.innerText = "ГОТОВО";
     }
 
     async function initCamera() {
@@ -126,36 +122,54 @@
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const rxText = document.getElementById('rxText');
+        const bitDisplay = document.getElementById('bitCount');
         
         let bitBuffer = "";
-        let waitingForRisingEdge = true; // Ждем перехода из 0 в 1
+        let waitingForRisingEdge = true;
+        let minBright = 255, maxBright = 0;
 
         const loop = () => {
             if (video.readyState === 4) {
                 canvas.width = 100; canvas.height = 100;
                 ctx.drawImage(video, 0, video.videoHeight*0.45, video.videoWidth, video.videoHeight*0.1, 0, 0, 100, 100);
                 
-                const thresh = document.getElementById('threshold').value;
-                const getVal = (x) => {
+                const getLum = (x) => {
                     const d = ctx.getImageData(x, 50, 1, 1).data;
-                    return ((d[0]+d[1]+d[2])/3) > thresh ? 1 : 0;
+                    return (d[0]+d[1]+d[2])/3;
                 };
 
-                const L = getVal(15), S = getVal(50), R = getVal(85);
+                const lumL = getLum(15), lumS = getLum(50), lumR = getLum(85);
 
-                // Визуализация
+                // --- ЛОГИКА АВТО-ПОРОГА ---
+                // Если видим сигнал калибровки (все ярко), сбрасываем всё
+                if (lumL > 200 && lumS > 200 && lumR > 200) {
+                    maxBright = lumS; 
+                    bitBuffer = "";
+                    bitDisplay.innerText = "0 (RESET)";
+                }
+                // Если всё черное — фиксируем минимум
+                if (lumL < 50 && lumS < 50 && lumR < 50) {
+                    minBright = lumS;
+                }
+                
+                // Динамический порог: середина между черным и белым
+                autoThreshold = (minBright + maxBright) / 2;
+                if (autoThreshold < 30 || autoThreshold > 220) autoThreshold = 130;
+                document.getElementById('curThresh').innerText = Math.round(autoThreshold);
+
+                const L = lumL > autoThreshold ? 1 : 0;
+                const S = lumS > autoThreshold ? 1 : 0;
+                const R = lumR > autoThreshold ? 1 : 0;
+
                 document.getElementById('indL').style.background = L ? "white" : "black";
                 document.getElementById('indS').style.background = S ? "white" : "black";
                 document.getElementById('indR').style.background = R ? "white" : "black";
 
-                // Логика калибровки (все белое — сброс)
-                if (L && S && R) { bitBuffer = ""; }
-
-                // ГЛАВНАЯ ЛОГИКА: Читаем только когда S переходит в 1
                 if (waitingForRisingEdge) {
                     if (S === 1) {
                         bitBuffer += L.toString() + R.toString();
-                        waitingForRisingEdge = false; // Засыпаем, пока S не станет 0
+                        bitDisplay.innerText = bitBuffer.length;
+                        waitingForRisingEdge = false;
 
                         if (bitBuffer.length >= 8) {
                             const code = parseInt(bitBuffer.substring(0, 8), 2);
@@ -164,9 +178,7 @@
                         }
                     }
                 } else {
-                    if (S === 0) {
-                        waitingForRisingEdge = true; // Теперь готовы ловить следующий подъем
-                    }
+                    if (S === 0) waitingForRisingEdge = true;
                 }
             }
             requestAnimationFrame(loop);
