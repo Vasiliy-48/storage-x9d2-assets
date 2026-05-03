@@ -3,121 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zebra Modem v2.3 - Stable</title>
+    <title>Optical Modem - Rock Solid</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 10px; background: #000; color: #ccc; text-align: center; }
-        .card { max-width: 600px; margin: 0 auto; background: #1a1a1a; padding: 20px; border-radius: 20px; border: 1px solid #333; }
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
+        .card { max-width: 500px; margin: 0 auto; background: #111; padding: 20px; border-radius: 20px; border: 1px solid #333; }
         
         #transmitter { 
-            display: flex; width: 100%; height: 200px; 
-            border: 3px solid #444; border-radius: 12px; overflow: hidden; margin: 15px 0; background: #000;
+            display: flex; width: 100%; height: 250px; 
+            border: 4px solid #444; border-radius: 15px; overflow: hidden; margin: 20px 0;
         }
-        .zone { flex: 1; border-right: 1px solid #111; }
-        #sync { border-left: 2px solid #000; border-right: 2px solid #000; }
+        .zone { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 30px; font-weight: bold; color: #222; }
+        #syncZone { border-left: 2px solid #000; border-right: 2px solid #000; }
 
-        textarea { width: 100%; height: 60px; border-radius: 8px; padding: 10px; border: none; margin: 10px 0; box-sizing: border-box; background: #222; color: #fff; font-size: 16px; }
-        button { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; }
-        .btn-send { background: #007aff; color: white; }
-        .btn-rx { background: #34c759; color: white; }
-
-        .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px; border-radius: 12px; overflow: hidden; border: 1px solid #444; }
+        textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; background: #222; color: #fff; font-size: 18px; }
+        button { width: 100%; padding: 18px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 18px; background: #007aff; color: #fff; }
+        
+        .video-wrap { position: relative; width: 100%; display: none; margin-top: 15px; border-radius: 15px; overflow: hidden; }
         video { width: 100%; background: #000; }
         
         .target-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; align-items: center; justify-content: space-around; pointer-events: none;
         }
-        .dot { width: 12px; height: 12px; border: 2px solid red; border-radius: 50%; background: rgba(255,0,0,0.3); }
-        .dot.sync { border-color: #0f0; border-width: 3px; }
+        .dot { width: 25px; height: 25px; border: 3px solid red; border-radius: 50%; background: rgba(255,0,0,0.2); color: #fff; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .dot.sync { border-color: #0f0; }
 
-        #rxText { background: #000; color: #0f0; font-family: monospace; height: 100px; width: 100%; margin-top: 10px; border-radius: 8px; padding: 10px; box-sizing: border-box; font-size: 16px; border: 1px solid #222; }
-        
-        .indicators { display: flex; justify-content: space-around; margin: 10px 0; }
-        .ind { width: 30px; height: 30px; border: 1px solid #444; border-radius: 5px; background: #000; }
-        #bitMonitor { font-family: monospace; color: #555; font-size: 12px; margin-top: 5px; }
+        #rxText { background: #000; color: #0f0; font-family: monospace; height: 100px; width: 100%; margin-top: 15px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; }
+        .ind-box { display: flex; justify-content: space-around; margin: 10px 0; }
+        .ind { width: 40px; height: 40px; border: 2px solid #333; border-radius: 8px; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="status" style="color: #666; font-size: 12px; margin-bottom: 5px;">ZEBRA STABLE v2.3</div>
+    <div id="status" style="color: #555; font-size: 12px;">MODEM v3.0 (STABLE)</div>
 
-    <textarea id="txText" placeholder="English text...">HELLO</textarea>
-    <button class="btn-send" onclick="transmit()">ОТПРАВИТЬ ДАННЫЕ</button>
+    <textarea id="txText">HELLO</textarea>
+    <button onclick="transmit()">ОТПРАВИТЬ СИГНАЛ</button>
     
     <div id="transmitter">
-        <div id="z0" class="zone"></div>
-        <div id="z1" class="zone"></div>
-        <div id="sync" class="zone"></div>
-        <div id="z2" class="zone"></div>
-        <div id="z3" class="zone"></div>
+        <div id="zL" class="zone">L</div>
+        <div id="zS" class="zone">S</div>
+        <div id="zR" class="zone">R</div>
     </div>
 
-    <button class="btn-rx" id="btnCam" onclick="initCamera()">ВКЛЮЧИТЬ ПРИЕМНИК</button>
+    <button style="background: #34c759;" id="btnCam" onclick="initCamera()">ВКЛЮЧИТЬ ПРИЕМНИК</button>
     
     <div id="rxSection" style="display:none;">
         <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
             <div class="target-overlay">
-                <div class="dot"></div><div class="dot"></div>
-                <div class="dot sync"></div>
-                <div class="dot"></div><div class="dot"></div>
+                <div class="dot">L</div>
+                <div class="dot sync">S</div>
+                <div class="dot">R</div>
             </div>
         </div>
         
-        <div class="indicators">
-            <div id="ind0" class="ind"></div><div id="ind1" class="ind"></div>
+        <div class="ind-box">
+            <div id="indL" class="ind"></div>
             <div id="indS" class="ind"></div>
-            <div id="ind2" class="ind"></div><div id="ind3" class="ind"></div>
+            <div id="indR" class="ind"></div>
         </div>
-        <div id="bitMonitor">Last bits: ----</div>
 
-        <p style="font-size: 12px; color: #888;">Порог: <span id="tVal">128</span></p>
-        <input type="range" id="threshold" min="0" max="255" value="128" style="width:100%" oninput="document.getElementById('tVal').innerText=this.value">
-        <button onclick="document.getElementById('rxText').value=''" style="background:#444; padding:5px; font-size:12px;">Очистить текст</button>
-        <textarea id="rxText" readonly></textarea>
+        <p style="font-size: 12px; color: #888;">Порог яркости: <span id="tVal">130</span></p>
+        <input type="range" id="threshold" min="0" max="255" value="130" style="width:100%" oninput="document.getElementById('tVal').innerText=this.value">
+        
+        <textarea id="rxText" readonly placeholder="Здесь будет текст..."></textarea>
+        <button onclick="document.getElementById('rxText').value=''" style="background:#333; font-size: 14px;">Очистить</button>
     </div>
 </div>
 
 <script>
-    const TICK_MS = 300; 
-    let currentSync = false;
-
-    // --- TRANSMIT ---
+    const TICK_MS = 400; // Медленно и уверенно
+    
     async function transmit() {
         const text = document.getElementById('txText').value;
-        const zones = [document.getElementById('z0'), document.getElementById('z1'), document.getElementById('z2'), document.getElementById('z3')];
-        const sZone = document.getElementById('sync');
-        const status = document.getElementById('status');
+        const zL = document.getElementById('zL'), zS = document.getElementById('zS'), zR = document.getElementById('zR');
+        
+        let bits = "";
+        for (let char of text) bits += char.charCodeAt(0).toString(2).padStart(8, '0');
 
-        let allBits = "";
-        for (let char of text) allBits += char.charCodeAt(0).toString(2).padStart(8, '0');
-
-        status.innerText = "ПРЕАМБУЛА (КАЛИБРОВКА)...";
-        // 1. ПРЕАМБУЛА: Все белое (1с) -> Все черное (0.5с)
-        zones.forEach(z => z.style.background = 'white'); sZone.style.background = 'white';
-        await new Promise(r => setTimeout(r, 1000));
-        zones.forEach(z => z.style.background = 'black'); sZone.style.background = 'black';
+        document.getElementById('status').innerText = "КАЛИБРОВКА...";
+        // Преамбула: Все черное -> Все белое (сброс приемника)
+        zL.style.background = zS.style.background = zR.style.background = "black";
         await new Promise(r => setTimeout(r, 600));
+        zL.style.background = zS.style.background = zR.style.background = "white";
+        await new Promise(r => setTimeout(r, 1000));
 
-        status.innerText = "ПЕРЕДАЧА ДАННЫХ...";
-        currentSync = false;
+        document.getElementById('status').innerText = "ПЕРЕДАЧА...";
+        for (let i = 0; i < bits.length; i += 2) {
+            const b0 = bits[i], b1 = bits[i+1];
+            
+            // 1. Ставим данные при ЧЕРНОЙ синхронизации
+            zS.style.background = "black";
+            zL.style.background = b0 === '1' ? "white" : "black";
+            zR.style.background = b1 === '1' ? "white" : "black";
+            await new Promise(r => setTimeout(r, TICK_MS));
 
-        for (let i = 0; i < allBits.length; i += 4) {
-            const chunk = allBits.substring(i, i + 4).padEnd(4, '0');
-            for (let j = 0; j < 4; j++) {
-                zones[j].style.background = chunk[j] === '1' ? 'white' : 'black';
-            }
-            currentSync = !currentSync;
-            sZone.style.background = currentSync ? 'white' : 'black';
+            // 2. Включаем БЕЛУЮ синхронизацию (сигнал для чтения)
+            zS.style.background = "white";
             await new Promise(r => setTimeout(r, TICK_MS));
         }
 
-        zones.forEach(z => z.style.background = 'black'); sZone.style.background = 'black';
-        status.innerText = "ЗАВЕРШЕНО";
+        zL.style.background = zS.style.background = zR.style.background = "black";
+        document.getElementById('status').innerText = "ГОТОВО";
     }
 
-    // --- RECEIVE ---
     async function initCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -127,7 +118,7 @@
             document.getElementById('vWrap').style.display = 'block';
             document.getElementById('btnCam').style.display = 'none';
             decode();
-        } catch (e) { alert("Camera error"); }
+        } catch (e) { alert("Ошибка камеры"); }
     }
 
     function decode() {
@@ -135,16 +126,14 @@
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const rxText = document.getElementById('rxText');
-        const bitMonitor = document.getElementById('bitMonitor');
         
-        let lastSync = -1;
-        let lastSampleTime = 0;
         let bitBuffer = "";
+        let waitingForRisingEdge = true; // Ждем перехода из 0 в 1
 
         const loop = () => {
             if (video.readyState === 4) {
                 canvas.width = 100; canvas.height = 100;
-                ctx.drawImage(video, 0, video.videoHeight*0.48, video.videoWidth, video.videoHeight*0.04, 0, 0, 100, 100);
+                ctx.drawImage(video, 0, video.videoHeight*0.45, video.videoWidth, video.videoHeight*0.1, 0, 0, 100, 100);
                 
                 const thresh = document.getElementById('threshold').value;
                 const getVal = (x) => {
@@ -152,42 +141,33 @@
                     return ((d[0]+d[1]+d[2])/3) > thresh ? 1 : 0;
                 };
 
-                const b0 = getVal(10), b1 = getVal(30), bS = getVal(50), b2 = getVal(70), b3 = getVal(90);
+                const L = getVal(15), S = getVal(50), R = getVal(85);
 
-                // UI Indicators
-                document.getElementById('ind0').style.background = b0 ? 'white' : 'black';
-                document.getElementById('ind1').style.background = b1 ? 'white' : 'black';
-                document.getElementById('indS').style.background = bS ? 'white' : 'black';
-                document.getElementById('ind2').style.background = b2 ? 'white' : 'black';
-                document.getElementById('ind3').style.background = b3 ? 'white' : 'black';
+                // Визуализация
+                document.getElementById('indL').style.background = L ? "white" : "black";
+                document.getElementById('indS').style.background = S ? "white" : "black";
+                document.getElementById('indR').style.background = R ? "white" : "black";
 
-                const now = performance.now();
+                // Логика калибровки (все белое — сброс)
+                if (L && S && R) { bitBuffer = ""; }
 
-                // 1. Детекция начала (сброс буфера если всё белое долго)
-                if (b0 && b1 && bS && b2 && b3) {
-                    if (bitBuffer !== "") {
-                        bitBuffer = ""; 
-                        console.log("Buffer reset by preamble");
-                    }
-                }
+                // ГЛАВНАЯ ЛОГИКА: Читаем только когда S переходит в 1
+                if (waitingForRisingEdge) {
+                    if (S === 1) {
+                        bitBuffer += L.toString() + R.toString();
+                        waitingForRisingEdge = false; // Засыпаем, пока S не станет 0
 
-                // 2. Считывание по изменению Sync + Cooldown (TICK_MS * 0.7)
-                if (lastSync !== -1 && bS !== lastSync) {
-                    if (now - lastSampleTime > (TICK_MS * 0.7)) {
-                        const chunk = b0.toString() + b1.toString() + b2.toString() + b3.toString();
-                        bitBuffer += chunk;
-                        bitMonitor.innerText = "Last bits: " + chunk + " (Total: " + bitBuffer.length + ")";
-                        
                         if (bitBuffer.length >= 8) {
-                            const byte = bitBuffer.substring(0, 8);
-                            const code = parseInt(byte, 2);
+                            const code = parseInt(bitBuffer.substring(0, 8), 2);
                             if (code >= 32 && code <= 126) rxText.value += String.fromCharCode(code);
                             bitBuffer = bitBuffer.substring(8);
                         }
-                        lastSampleTime = now;
+                    }
+                } else {
+                    if (S === 0) {
+                        waitingForRisingEdge = true; // Теперь готовы ловить следующий подъем
                     }
                 }
-                lastSync = bS;
             }
             requestAnimationFrame(loop);
         };
