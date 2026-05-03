@@ -3,141 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Modem v4.5 - FEC</title>
+    <title>Matrix Optical Modem v5.0</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
-        .card { max-width: 800px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
-        #transmitter { 
-            display: flex; width: 100%; height: 200px; 
-            border: 3px solid #444; border-radius: 12px; overflow: hidden; margin: 15px 0;
-        }
-        .zone { flex: 1; border-right: 1px solid #111; transition: background 0.05s; }
-        #zS { border-left: 4px solid #000; border-right: 4px solid #000; background: #222; } /* Sync */
-        #zP { background: #1a1a1a; } /* Parity bit zone */
-
-        textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 10px 0; background: #222; color: #fff; font-size: 16px; }
-        button { width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; background: #007aff; color: #fff; }
+        body { font-family: system-ui, sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
+        .card { max-width: 500px; margin: 0 auto; background: #111; padding: 15px; border-radius: 24px; border: 1px solid #333; }
         
-        .video-wrap { position: relative; width: 100%; display: none; margin-top: 10px; border-radius: 15px; overflow: hidden; }
+        /* Сетка передачи 3x3 */
+        #transmitter { 
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+            width: 300px; height: 300px; margin: 20px auto;
+            border: 4px solid #444; border-radius: 12px; overflow: hidden; background: #000;
+        }
+        .cell { border: 1px solid #111; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #222; transition: background 0.05s; }
+        #cell-4 { background: #222; border: 2px solid #000; } /* Центр - SYNC */
+
+        textarea { width: 100%; height: 60px; border-radius: 12px; padding: 12px; border: none; margin: 10px 0; background: #222; color: #fff; font-size: 16px; box-sizing: border-box;}
+        button { width: 100%; padding: 16px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; background: #007aff; color: #fff; }
+        
+        .video-wrap { position: relative; width: 100%; max-width: 400px; margin: 10px auto; border-radius: 20px; overflow: hidden; display: none; border: 2px solid #444; }
         video { width: 100%; background: #000; }
         
-        .target-overlay {
+        /* Прицел-сетка */
+        .grid-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: space-between; pointer-events: none; padding: 0 1%;
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+            pointer-events: none;
         }
-        .dot { width: 10px; height: 10px; border: 2px solid red; border-radius: 50%; background: rgba(255,0,0,0.3); }
-        .dot.sync { border-color: #0f0; width: 15px; height: 15px; }
-        .dot.parity { border-color: #00ffff; }
+        .grid-dot { display: flex; align-items: center; justify-content: center; }
+        .dot { width: 14px; height: 14px; border: 2px solid red; border-radius: 50%; background: rgba(255,0,0,0.2); }
+        .dot.sync { border-color: #0f0; width: 20px; height: 20px; }
 
-        #rxText { background: #000; color: #0f0; font-family: monospace; height: 100px; width: 100%; margin-top: 10px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; }
-        .ind-row { display: flex; justify-content: space-between; margin: 10px 0; padding: 0 1%; }
-        .ind { width: 15px; height: 15px; border: 1px solid #333; border-radius: 3px; background: #000; font-size: 8px;}
+        #rxText { background: #000; color: #0f0; font-family: monospace; height: 80px; width: 100%; margin-top: 10px; border-radius: 12px; padding: 10px; font-size: 18px; border: 1px solid #333; box-sizing: border-box;}
+        .monitor { display: grid; grid-template-columns: repeat(3, 12px); gap: 5px; justify-content: center; margin: 10px 0; }
+        .m-cell { width: 12px; height: 12px; border: 1px solid #444; background: #000; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="status" style="color: #007aff; font-size: 12px;">v4.5: PARITY CHECK & CAM SELECT</div>
+    <div id="status" style="color: #007aff; font-size: 12px; font-weight: bold;">v5.0 MATRIX GRID MODEM</div>
 
-    <textarea id="txText">HELLO DATA</textarea>
-    <button onclick="transmit()">ОТПРАВИТЬ (7 DATA + 1 PARITY)</button>
+    <textarea id="txText">HELLO</textarea>
+    <button onclick="transmit()">ОТПРАВИТЬ МАТРИЦЕЙ</button>
     
     <div id="transmitter">
-        <div id="z0" class="zone"></div><div id="z1" class="zone"></div><div id="z2" class="zone"></div>
-        <div id="zS" class="zone"></div>
-        <div id="z3" class="zone"></div><div id="z4" class="zone"></div><div id="z5" class="zone"></div><div id="z6" class="zone"></div>
-        <div id="zP" class="zone">P</div>
+        <div id="cell-0" class="cell"></div><div id="cell-1" class="cell"></div><div id="cell-2" class="cell"></div>
+        <div id="cell-3" class="cell"></div><div id="cell-4" class="cell">S</div><div id="cell-5" class="cell"></div>
+        <div id="cell-6" class="cell"></div><div id="cell-7" class="cell"></div><div id="cell-8" class="cell">P</div>
     </div>
 
-    <div style="display: flex; gap: 5px;">
-        <button style="background: #34c759; flex: 3;" id="btnCam" onclick="initCamera()">ВКЛЮЧИТЬ ПРИЕМНИК</button>
-        <button style="background: #555; flex: 1;" onclick="switchCamera()">КАМЕРА 🔄</button>
+    <div style="display: flex; gap: 8px;">
+        <button style="background: #34c759; flex: 2;" onclick="initCamera()">ПРИЕМНИК</button>
+        <button style="background: #444; flex: 1;" onclick="switchCamera()">КАМЕРА 🔄</button>
     </div>
     
     <div id="rxSection" style="display:none;">
         <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
-            <div class="target-overlay">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                <div class="dot sync"></div>
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                <div class="dot parity"></div>
+            <div class="grid-overlay">
+                <div class="grid-dot"><div class="dot"></div></div><div class="grid-dot"><div class="dot"></div></div><div class="grid-dot"><div class="dot"></div></div>
+                <div class="grid-dot"><div class="dot"></div></div><div class="grid-dot"><div class="dot sync"></div></div><div class="grid-dot"><div class="dot"></div></div>
+                <div class="grid-dot"><div class="dot"></div></div><div class="grid-dot"><div class="dot"></div></div><div class="grid-dot"><div class="dot"></div></div>
             </div>
         </div>
         
-        <div class="ind-row">
-            <div id="i0" class="ind">0</div><div id="i1" class="ind">1</div><div id="i2" class="ind">2</div>
-            <div id="iS" class="ind" style="border-color:#0f0">S</div>
-            <div id="i3" class="ind">3</div><div id="i4" class="ind">4</div><div id="i5" class="ind">5</div><div id="i6" class="ind">6</div>
-            <div id="iP" class="ind" style="border-color:#00ffff">P</div>
+        <div class="monitor" id="monitor">
+            <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell"></div>
+            <div class="m-cell"></div><div class="m-cell" style="border-color:#0f0"></div><div class="m-cell"></div>
+            <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell" style="border-color:#0ff"></div>
         </div>
 
-        <div style="font-size: 11px; color: #555;">
-            Ошибок: <span id="errCount" style="color:red">0</span> | Порог: <span id="curThresh">---</span>
+        <div style="font-size: 11px; color: #555; margin-bottom: 5px;">
+            Ошибок CRC: <span id="errCount" style="color:#ff3b30">0</span> | Порог: <span id="curThresh">120</span>
         </div>
-        
         <textarea id="rxText" readonly></textarea>
+        <button onclick="document.getElementById('rxText').value=''" style="background:#222; font-size:12px; padding:8px;">Очистить</button>
     </div>
 </div>
 
 <script>
     const TICK_MS = 450; 
-    let currentDevices = [];
     let camIndex = 0;
-    let lockedThreshold = 130;
+    let lockedThresh = 120;
+    let currentStream = null;
 
-    // --- TRANSMITTER ---
+    // Порядок ячеек данных (пропуская центральную 4)
+    const DATA_CELLS = [0, 1, 2, 3, 5, 6, 7]; // 7 бит данных
+    const PARITY_CELL = 8;
+    const SYNC_CELL = 4;
+
     async function transmit() {
         const text = document.getElementById('txText').value;
-        const zones = [0,1,2,3,4,5,6].map(i => document.getElementById('z'+i));
-        const sZone = document.getElementById('zS');
-        const pZone = document.getElementById('zP');
+        const allCells = Array.from({length: 9}, (_, i) => document.getElementById(`cell-${i}`));
         
-        // Калибровка
-        [...zones, sZone, pZone].forEach(z => z.style.background = "white");
+        // Преамбула (Handshake)
+        allCells.forEach(c => c.style.background = "white");
         await new Promise(r => setTimeout(r, 1200));
-        [...zones, sZone, pZone].forEach(z => z.style.background = "black");
+        allCells.forEach(c => c.style.background = "black");
         await new Promise(r => setTimeout(r, 800));
 
         for (let char of text) {
-            let code = char.charCodeAt(0) & 127; // Только 7 бит данных
-            let bits = code.toString(2).padStart(7, '0');
-            
-            // Считаем бит четности (XOR)
-            let parity = bits.split('').reduce((a, b) => a ^ parseInt(b), 0);
+            let code = char.charCodeAt(0) & 127;
+            let bits = code.toString(2).padStart(7, '0').split('').map(Number);
+            let parity = bits.reduce((a, b) => a ^ b, 0);
 
-            sZone.style.background = "black";
-            for(let j=0; j<7; j++) zones[j].style.background = bits[j] === '1' ? "white" : "black";
-            pZone.style.background = parity === 1 ? "white" : "black";
+            // Sync OFF
+            allCells[SYNC_CELL].style.background = "black";
+            bits.forEach((bit, i) => allCells[DATA_CELLS[i]].style.background = bit ? "white" : "black");
+            allCells[PARITY_CELL].style.background = parity ? "white" : "black";
             await new Promise(r => setTimeout(r, TICK_MS));
 
-            sZone.style.background = "white";
+            // Sync ON
+            allCells[SYNC_CELL].style.background = "white";
             await new Promise(r => setTimeout(r, TICK_MS));
         }
-        [...zones, sZone, pZone].forEach(z => z.style.background = "black");
+        allCells.forEach(c => c.style.background = "black");
     }
 
-    // --- CAMERA ENGINE ---
     async function switchCamera() {
         const devices = await navigator.mediaDevices.enumerateDevices();
-        currentDevices = devices.filter(d => d.kind === 'videoinput');
-        camIndex = (camIndex + 1) % currentDevices.length;
-        initCamera(currentDevices[camIndex].deviceId);
+        const cams = devices.filter(d => d.kind === 'videoinput');
+        camIndex = (camIndex + 1) % cams.length;
+        initCamera(cams[camIndex].deviceId);
     }
 
     async function initCamera(deviceId = null) {
+        if(currentStream) currentStream.getTracks().forEach(t => t.stop());
         const constraints = deviceId ? { video: { deviceId: { exact: deviceId } } } : { video: { facingMode: 'environment' } };
         try {
-            if(window.stream) window.stream.getTracks().forEach(t => t.stop());
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
-            window.stream = stream;
-            document.getElementById('video').srcObject = stream;
+            currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+            document.getElementById('video').srcObject = currentStream;
             document.getElementById('video').play();
             document.getElementById('rxSection').style.display = 'block';
             document.getElementById('vWrap').style.display = 'block';
-            document.getElementById('btnCam').style.display = 'none';
             decode();
-        } catch (e) { alert("Ошибка выбора камеры. Попробуйте другую."); }
+        } catch (e) { alert("Камера недоступна"); }
     }
 
     function decode() {
@@ -145,69 +145,51 @@
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const rxText = document.getElementById('rxText');
-        const errDisplay = document.getElementById('errCount');
+        const errDisp = document.getElementById('errCount');
+        const mCells = document.getElementById('monitor').children;
         
-        let waitingForRisingEdge = true;
-        let rxState = "IDLE"; 
-        let errorCount = 0;
+        let waitRising = true;
+        let errors = 0;
 
         const loop = () => {
             if (video.readyState === 4) {
                 canvas.width = 100; canvas.height = 100;
-                // Сэмплируем узкую полосу для скорости
-                ctx.drawImage(video, 0, video.videoHeight*0.48, video.videoWidth, video.videoHeight*0.04, 0, 0, 100, 100);
+                // Кропаем центральный квадрат кадра
+                ctx.drawImage(video, video.videoWidth*0.25, video.videoHeight*0.25, video.videoWidth*0.5, video.videoHeight*0.5, 0, 0, 100, 100);
                 
-                const getLum = (x) => {
-                    // Берем среднее по вертикальному столбику 10 пикселей для стабильности
-                    let sum = 0;
-                    const d = ctx.getImageData(x, 45, 1, 10).data;
-                    for(let i=0; i<d.length; i+=4) sum += (d[i]+d[i+1]+d[i+2])/3;
-                    return sum / 10;
+                const thresh = document.getElementById('threshold')?.value || 120;
+                
+                const getBit = (x, y) => {
+                    const d = ctx.getImageData(x, y, 1, 1).data;
+                    const b = (d[0]+d[1]+d[2])/3;
+                    return b > thresh ? 1 : 0;
                 };
 
-                // Точки: 0,1,2 (Data) | 3 (Sync) | 4,5,6,7 (Data) | 8 (Parity)
-                const points = [5, 16, 27, 39, 50, 61, 72, 83, 94];
-                const lums = points.map(x => getLum(x));
-                const lumS = lums[3]; 
+                // Сетка координат 3x3 на холсте 100x100
+                const coords = [20, 50, 80];
+                let bits = [];
+                for(let y of coords) for(let x of coords) bits.push(getBit(x, y));
 
-                if (rxState === "IDLE") {
-                    if (lums.every(v => v > 200)) { rxState = "CALIB"; }
-                } 
-                else if (rxState === "CALIB") {
-                    if (lums.every(v => v < 60)) { 
-                        lockedThreshold = 120; // Можно оставить фиксированным после калибровки
-                        rxState = "RECEIVING"; 
+                // Мониторинг
+                bits.forEach((b, i) => mCells[i].style.background = b ? "white" : "black");
+
+                const sBit = bits[SYNC_CELL];
+
+                if (waitRising && sBit === 1) {
+                    const dataBits = DATA_CELLS.map(i => bits[i]);
+                    const parityRec = bits[PARITY_CELL];
+                    const parityCalc = dataBits.reduce((a, b) => a ^ b, 0);
+
+                    if (parityCalc === parityRec) {
+                        const code = parseInt(dataBits.join(''), 2);
+                        if (code >= 32) rxText.value += String.fromCharCode(code);
+                    } else {
+                        errors++; errDisp.innerText = errors;
+                        rxText.value += "░";
                     }
-                }
-                else if (rxState === "RECEIVING") {
-                    const bits = lums.map(v => v > lockedThreshold ? 1 : 0);
-                    
-                    bits.forEach((b, i) => {
-                        const id = i === 3 ? 'iS' : (i === 8 ? 'iP' : 'i' + (i < 3 ? i : i - 1));
-                        const el = document.getElementById(id);
-                        if(el) el.style.background = b ? "white" : "black";
-                    });
-
-                    if (waitingForRisingEdge && bits[3] === 1) {
-                        // Читаем 7 бит данных
-                        const dataBits = [...bits.slice(0,3), ...bits.slice(4,8)];
-                        const receivedParity = bits[8];
-                        
-                        // Проверка четности
-                        const calculatedParity = dataBits.reduce((a, b) => a ^ b, 0);
-
-                        if (calculatedParity === receivedParity) {
-                            const code = parseInt(dataBits.join(''), 2);
-                            if (code >= 32) rxText.value += String.fromCharCode(code);
-                        } else {
-                            errorCount++;
-                            errDisplay.innerText = errorCount;
-                            rxText.value += "░"; // Символ ошибки
-                        }
-                        waitingForRisingEdge = false;
-                    } else if (bits[3] === 0) {
-                        waitingForRisingEdge = true;
-                    }
+                    waitRising = false;
+                } else if (sBit === 0) {
+                    waitRising = true;
                 }
             }
             requestAnimationFrame(loop);
@@ -215,5 +197,7 @@
         loop();
     }
 </script>
+<!-- Скрытый ползунок порога для тонкой настройки если надо -->
+<input type="range" id="threshold" min="0" max="255" value="120" style="display:none">
 </body>
 </html>
