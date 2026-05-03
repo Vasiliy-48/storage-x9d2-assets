@@ -3,83 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Modem Pro</title>
+    <title>RGB Hyper-Modem</title>
     <style>
-        body { font-family: -apple-system, sans-serif; margin: 0; padding: 20px; background: #f4f4f9; text-align: center; }
-        .card { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        h1 { color: #333; font-size: 24px; }
-        textarea { width: 100%; height: 100px; border: 2px solid #ddd; border-radius: 12px; padding: 12px; box-sizing: border-box; font-size: 16px; margin: 15px 0; }
-        button { width: 100%; padding: 16px; background: #007aff; color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
-        #flashArea { width: 100%; height: 150px; background: black; border-radius: 12px; margin-top: 15px; display: flex; align-items: center; justify-content: center; color: #555; border: 2px solid #eee; }
-        .video-wrap { position: relative; width: 100%; border-radius: 12px; overflow: hidden; display: none; margin-top: 15px; }
-        video { width: 100%; background: #000; transform: scaleX(-1); }
-        .target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 2px solid red; pointer-events: none; border-radius: 4px; box-shadow: 0 0 0 1000px rgba(0,0,0,0.4); }
-        .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; background: #e1f5fe; color: #01579b; font-weight: bold; margin-bottom: 10px; }
-        #perceived { width: 50px; height: 50px; border-radius: 50%; border: 4px solid #333; margin: 15px auto; background: black; }
+        body { font-family: system-ui, sans-serif; margin: 0; padding: 15px; background: #111; color: white; text-align: center; }
+        .card { max-width: 500px; margin: 0 auto; background: #222; padding: 20px; border-radius: 20px; border: 1px solid #444; }
+        textarea { width: 100%; height: 80px; background: #333; color: #fff; border: 1px solid #555; border-radius: 10px; padding: 10px; box-sizing: border-box; margin: 10px 0; }
+        button { width: 100%; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; }
+        .btn-send { background: #ff3b30; color: white; }
+        .btn-cam { background: #34c759; color: white; }
+        #flashArea { width: 100%; height: 200px; background: #000; border-radius: 15px; margin-top: 15px; border: 4px solid #333; transition: background-color 0.05s; }
+        video { width: 100%; border-radius: 15px; background: #000; transform: scaleX(-1); }
+        .target { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border: 3px solid #ff3b30; border-radius: 50%; box-shadow: 0 0 0 1000px rgba(0,0,0,0.6); }
+        .status { font-size: 14px; color: #aaa; margin-bottom: 10px; }
+        #perceived { width: 40px; height: 40px; border-radius: 50%; margin: 10px auto; border: 2px solid white; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>🔦 Оптический Модем</h1>
-    <div id="status" class="status-badge">Готов к работе</div>
+    <div class="status" id="status">RGB MODEM READY</div>
     
-    <!-- СЕКЦИЯ ОТПРАВКИ -->
-    <textarea id="txText" placeholder="Введи текст (English)...">HELLO</textarea>
-    <button onclick="transmit()">ОТПРАВИТЬ СВЕТОМ</button>
-    <div id="flashArea">ЭКРАН-ИЗЛУЧАТЕЛЬ</div>
-    
-    <div style="margin: 30px 0; border-top: 1px solid #eee;"></div>
+    <textarea id="txText" placeholder="English text here...">SPEED</textarea>
+    <button class="btn-send" onclick="transmit()">START RGB BURST</button>
+    <div id="flashArea"></div>
 
-    <!-- СЕКЦИЯ ПРИЕМА -->
-    <button id="btnCam" style="background: #34c759;" onclick="initCamera()">ВКЛЮЧИТЬ ПРИЕМНИК</button>
-    
+    <hr style="margin: 20px 0; border: 0; border-top: 1px solid #444;">
+
+    <button class="btn-cam" id="btnCam" onclick="initCamera()">OPEN RECEIVER</button>
     <div id="rxSection" style="display:none;">
-        <div class="video-wrap" id="vWrap">
+        <div style="position:relative; line-height: 0;">
             <video id="video" playsinline></video>
             <div class="target"></div>
         </div>
-        <p>Порог чувствительности:</p>
-        <input type="range" id="threshold" min="0" max="255" value="140" style="width: 100%;">
         <div id="perceived"></div>
-        <p>Получено:</p>
-        <textarea id="rxText" readonly placeholder="Тут появится текст..."></textarea>
+        <textarea id="rxText" readonly placeholder="Decoded text..."></textarea>
     </div>
 </div>
 
 <script>
-    const BIT_TIME = 150; 
-    const statusDiv = document.getElementById('status');
+    // Настройки скорости (100мс - очень быстро для камеры, 150мс - надежно)
+    const FRAME_TIME = 120; 
+    
+    // Палитра: 8 цветов (3 бита на цвет)
+    const PALETTE = [
+        [0,0,0],       // 000 (Black)
+        [255,0,0],     // 001 (Red)
+        [0,255,0],     // 010 (Green)
+        [0,0,255],     // 011 (Blue)
+        [255,255,0],   // 100 (Yellow)
+        [255,0,255],   // 101 (Magenta)
+        [0,255,255],   // 110 (Cyan)
+        [255,255,255]  // 111 (White)
+    ];
 
-    // ПЕРЕДАЧА
-    async function transmit() {
-        const text = document.getElementById('txText').value.toUpperCase();
-        if(!text) return;
-        const area = document.getElementById('flashArea');
-        const bits = Array.from(text).map(c => (c.charCodeAt(0) & 255).toString(2).padStart(8, '0')).join('');
-        
-        statusDiv.innerText = "ИДЕТ ПЕРЕДАЧА...";
-        statusDiv.style.background = "#fff9c4";
-
-        for (let i = 0; i < bits.length; i += 8) {
-            let byte = bits.substring(i, i+8);
-            // Start bit
-            area.style.backgroundColor = 'white'; await new Promise(r => setTimeout(r, BIT_TIME));
-            // Data bits
-            for (let bit of byte) {
-                area.style.backgroundColor = bit === '1' ? 'white' : 'black';
-                await new Promise(r => setTimeout(r, BIT_TIME));
-            }
-            // Stop bits
-            area.style.backgroundColor = 'black'; await new Promise(r => setTimeout(r, BIT_TIME * 2));
-        }
-        area.style.backgroundColor = 'black';
-        statusDiv.innerText = "ГОТОВО";
-        statusDiv.style.background = "#e1f5fe";
+    function rgbToHex(rgb) {
+        return `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
     }
 
-    // ПРИЕМ
+    // Передача
+    async function transmit() {
+        const text = document.getElementById('txText').value;
+        const area = document.getElementById('flashArea');
+        const status = document.getElementById('status');
+        
+        // 1. Конвертируем текст в поток бит
+        let bitStream = "";
+        for (let char of text) {
+            bitStream += char.charCodeAt(0).toString(2).padStart(9, '0'); // 9 бит на символ для кратности 3
+        }
+
+        status.innerText = "CALIBRATING...";
+        // Преамбула для настройки экспозиции камеры (Белый-Черный-Белый)
+        for (let c of [7, 0, 7, 0]) {
+            area.style.backgroundColor = rgbToHex(PALETTE[c]);
+            await new Promise(r => setTimeout(r, 400));
+        }
+
+        status.innerText = "SENDING RGB BURST...";
+        // 2. Группируем по 3 бита и сопоставляем с цветом
+        for (let i = 0; i < bitStream.length; i += 3) {
+            let chunk = bitStream.substring(i, i + 3).padEnd(3, '0');
+            let colorIndex = parseInt(chunk, 2);
+            area.style.backgroundColor = rgbToHex(PALETTE[colorIndex]);
+            await new Promise(r => setTimeout(r, FRAME_TIME));
+        }
+
+        area.style.backgroundColor = 'black';
+        status.innerText = "FINISHED";
+    }
+
+    // Прием
     async function initCamera() {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
@@ -87,47 +100,63 @@
             video.srcObject = stream;
             video.play();
             document.getElementById('rxSection').style.display = 'block';
-            document.getElementById('vWrap').style.display = 'block';
             document.getElementById('btnCam').style.display = 'none';
-            process();
-        } catch (e) { alert("Камера недоступна. Убедитесь, что дали разрешение!"); }
+            decodeLoop();
+        } catch (e) { alert("Camera error"); }
     }
 
-    function process() {
+    function decodeLoop() {
         const video = document.getElementById('video');
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        let rxState = 'IDLE', bits = [], lastL = 0, nextS = 0;
+        const rxText = document.getElementById('rxText');
+        
+        let lastColorIndex = -1;
+        let bitBuffer = "";
+        let isReading = false;
+        let lastSampleTime = 0;
 
-        const loop = () => {
+        const process = () => {
             if (video.readyState === 4) {
-                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0);
-                const imgData = ctx.getImageData(canvas.width/2-5, canvas.height/2-5, 10, 10).data;
-                let bright = 0;
-                for(let i=0; i<imgData.length; i+=4) bright += (imgData[i]+imgData[i+1]+imgData[i+2])/3;
-                bright /= (imgData.length/4);
+                canvas.width = 100; canvas.height = 100;
+                ctx.drawImage(video, video.videoWidth/2-10, video.videoHeight/2-10, 20, 20, 0, 0, 100, 100);
+                const data = ctx.getImageData(50, 50, 1, 1).data;
+                const r = data[0], g = data[1], b = data[2];
+                
+                // Находим ближайший цвет из палитры по Евклидову расстоянию
+                let minDist = Infinity;
+                let colorIndex = 0;
+                PALETTE.forEach((c, i) => {
+                    let d = Math.sqrt((r-c[0])**2 + (g-c[1])**2 + (b-c[2])**2);
+                    if (d < minDist) { minDist = d; colorIndex = i; }
+                });
 
-                const isL = bright > document.getElementById('threshold').value ? 1 : 0;
-                document.getElementById('perceived').style.backgroundColor = isL ? 'white' : 'black';
+                document.getElementById('perceived').style.backgroundColor = rgbToHex(PALETTE[colorIndex]);
 
                 const now = performance.now();
-                if (rxState === 'IDLE' && lastL === 0 && isL === 1) {
-                    rxState = 'READ'; bits = []; nextS = now + (BIT_TIME * 1.5);
-                    statusDiv.innerText = "ПРИЕМ ДАННЫХ...";
-                } else if (rxState === 'READ' && now >= nextS) {
-                    bits.push(isL); nextS += BIT_TIME;
-                    if (bits.length === 8) {
-                        const charCode = parseInt(bits.join(''), 2);
-                        document.getElementById('rxText').value += String.fromCharCode(charCode);
-                        rxState = 'IDLE'; statusDiv.innerText = "ЖДУ СИГНАЛ";
+                
+                // Простая логика: если цвет изменился и прошло достаточно времени
+                if (colorIndex !== lastColorIndex && (now - lastSampleTime > FRAME_TIME * 0.8)) {
+                    // Игнорируем черный в покое
+                    if (colorIndex !== 0 || isReading) {
+                        isReading = true;
+                        let bits = colorIndex.toString(2).padStart(3, '0');
+                        bitBuffer += bits;
+                        
+                        if (bitBuffer.length >= 9) {
+                            let charBits = bitBuffer.substring(0, 9);
+                            let code = parseInt(charBits, 2);
+                            if (code > 0) rxText.value += String.fromCharCode(code);
+                            bitBuffer = bitBuffer.substring(9);
+                        }
+                        lastSampleTime = now;
                     }
                 }
-                lastL = isL;
+                lastColorIndex = colorIndex;
             }
-            requestAnimationFrame(loop);
+            requestAnimationFrame(process);
         };
-        loop();
+        process();
     }
 </script>
 </body>
