@@ -258,7 +258,7 @@
         } catch (e) { alert("Ошибка камеры"); }
     }
 
-    function decode() {
+function decode() {
         const video = document.getElementById('video');
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -268,6 +268,7 @@
         let waitRising = true;
         let rxState = "IDLE";
         let calMax = 0, calMin = 255;
+        let lastReadTime = 0; // Таймер анти-дребезга
 
         const loop = () => {
             if (video.readyState === 4) {
@@ -310,52 +311,59 @@
                 const thresh = parseInt(document.getElementById('rxThresh').value);
                 const bits = lums.map(l => l > thresh ? 1 : 0);
                 
-                // Рисуем мониторчик
                 bits.forEach((b, i) => mCells[i].style.background = b ? "white" : "black");
 
-                if (waitRising && bits[SYNC_CELL] === 1) {
-                    let f =[];
-                    for(let i=0; i<25; i++) if(i !== SYNC_CELL) f.push(bits[i]);
-                    
-                    let d_rx = f.slice(0, 16);
-                    let pr_rx = f.slice(16, 20);
-                    let pc_rx = f.slice(20, 24);
+                let now = performance.now();
 
-                    let errR = [], errC =[];
-                    for(let r=0; r<4; r++) {
-                        let cP = d_rx[r*4]^d_rx[r*4+1]^d_rx[r*4+2]^d_rx[r*4+3];
-                        if(cP !== pr_rx[r]) errR.push(r);
-                    }
-                    for(let c=0; c<4; c++) {
-                        let cC = d_rx[c]^d_rx[c+4]^d_rx[c+8]^d_rx[c+12];
-                        if(cC !== pc_rx[c]) errC.push(c);
-                    }
+                // ИСПОЛЬЗУЕМ ГИСТЕРЕЗИС (thresh + 15 и thresh - 15) ДЛЯ СИНХРОНИЗАТОРА
+                let syncIsHigh = lumS > (thresh + 15);
+                let syncIsLow = lumS < (thresh - 15);
 
-                    // Анализ ошибок
-                    if(errR.length === 1 && errC.length === 1) {
-                        // Лечим 1 бит
-                        d_rx[errR[0]*4 + errC[0]] ^= 1;
-                        healed++; document.getElementById('cHeal').innerText = healed;
-                    } 
-                    
-                    if ((errR.length > 0 || errC.length > 0) && !(errR.length === 1 && errC.length === 1)) {
-                        // Фатальная ошибка (больше 1 бита). Выводим мусор, но НЕ останавливаем цикл!
-                        fatal++; document.getElementById('cFatal').innerText = fatal;
-                        rxText.value += "░░"; 
-                    } else {
-                        // Успех (или вылечено). Собираем 2 буквы.
-                        let char1 = parseInt(d_rx.slice(0,8).join(''), 2);
-                        let char2 = parseInt(d_rx.slice(8,16).join(''), 2);
-                        if(char1 >= 32) rxText.value += String.fromCharCode(char1);
-                        if(char2 >= 32) rxText.value += String.fromCharCode(char2);
-                    }
+                if (waitRising && syncIsHigh) {
+                    // АНТИ-ДРЕБЕЗГ: Считываем кадр только если прошло > 200 мс с прошлого
+                    if (now - lastReadTime > 200) {
+                        let f =[];
+                        for(let i=0; i<25; i++) if(i !== SYNC_CELL) f.push(bits[i]);
+                        
+                        let d_rx = f.slice(0, 16);
+                        let pr_rx = f.slice(16, 20);
+                        let pc_rx = f.slice(20, 24);
 
-                    waitRising = false;
-                } else if (bits[SYNC_CELL] === 0) {
-                    waitRising = true;
+                        let errR = [], errC =[];
+                        for(let r=0; r<4; r++) {
+                            let cP = d_rx[r*4]^d_rx[r*4+1]^d_rx[r*4+2]^d_rx[r*4+3];
+                            if(cP !== pr_rx[r]) errR.push(r);
+                        }
+                        for(let c=0; c<4; c++) {
+                            let cC = d_rx[c]^d_rx[c+4]^d_rx[c+8]^d_rx[c+12];
+                            if(cC !== pc_rx[c]) errC.push(c);
+                        }
+
+                        if(errR.length === 1 && errC.length === 1) {
+                            d_rx[errR[0]*4 + errC[0]] ^= 1;
+                            healed++; document.getElementById('cHeal').innerText = healed;
+                        } 
+                        
+                        if ((errR.length > 0 || errC.length > 0) && !(errR.length === 1 && errC.length === 1)) {
+                            fatal++; document.getElementById('cFatal').innerText = fatal;
+                            rxText.value += "░░"; 
+                        } else {
+                            let char1 = parseInt(d_rx.slice(0,8).join(''), 2);
+                            let char2 = parseInt(d_rx.slice(8,16).join(''), 2);
+                            if(char1 >= 32) rxText.value += String.fromCharCode(char1);
+                            if(char2 >= 32) rxText.value += String.fromCharCode(char2);
+                        }
+
+                        lastReadTime = now; // Засекаем время
+                        waitRising = false;
+                    }
+                } else if (!waitRising && syncIsLow) {
+                    // Разрешаем следующее считывание только если прошло > 200 мс 
+                    if (now - lastReadTime > 200) {
+                        waitRising = true;
+                    }
                 }
             }
-            // Цикл теперь будет работать ВСЕГДА!
             requestAnimationFrame(loop);
         };
         loop();
