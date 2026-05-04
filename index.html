@@ -277,7 +277,6 @@
                 
                 const scale = parseInt(document.getElementById('rxScale').value);
                 
-                // Получение яркости 3x3 пикселей
                 const getLum = (x, y) => {
                     const d = ctx.getImageData(x-1, y-1, 3, 3).data;
                     let sum = 0;
@@ -311,10 +310,10 @@
                 const thresh = parseInt(document.getElementById('rxThresh').value);
                 const bits = lums.map(l => l > thresh ? 1 : 0);
                 
+                // Рисуем мониторчик
                 bits.forEach((b, i) => mCells[i].style.background = b ? "white" : "black");
 
                 if (waitRising && bits[SYNC_CELL] === 1) {
-                    // Извлекаем 24 бита (пропуская SYNC)
                     let f =[];
                     for(let i=0; i<25; i++) if(i !== SYNC_CELL) f.push(bits[i]);
                     
@@ -322,7 +321,6 @@
                     let pr_rx = f.slice(16, 20);
                     let pc_rx = f.slice(20, 24);
 
-                    // 2D Parity Check
                     let errR = [], errC =[];
                     for(let r=0; r<4; r++) {
                         let cP = d_rx[r*4]^d_rx[r*4+1]^d_rx[r*4+2]^d_rx[r*4+3];
@@ -333,29 +331,31 @@
                         if(cC !== pc_rx[c]) errC.push(c);
                     }
 
+                    // Анализ ошибок
                     if(errR.length === 1 && errC.length === 1) {
-                        // Одиночная ошибка - ЛЕЧИМ!
+                        // Лечим 1 бит
                         d_rx[errR[0]*4 + errC[0]] ^= 1;
                         healed++; document.getElementById('cHeal').innerText = healed;
-                    } else if (errR.length > 0 || errC.length > 0) {
-                        // Невосстановимо
+                    } 
+                    
+                    if ((errR.length > 0 || errC.length > 0) && !(errR.length === 1 && errC.length === 1)) {
+                        // Фатальная ошибка (больше 1 бита). Выводим мусор, но НЕ останавливаем цикл!
                         fatal++; document.getElementById('cFatal').innerText = fatal;
-                        rxText.value += "░░"; // 2 байта потеряны
-                        waitRising = false;
-                        return;
+                        rxText.value += "░░"; 
+                    } else {
+                        // Успех (или вылечено). Собираем 2 буквы.
+                        let char1 = parseInt(d_rx.slice(0,8).join(''), 2);
+                        let char2 = parseInt(d_rx.slice(8,16).join(''), 2);
+                        if(char1 >= 32) rxText.value += String.fromCharCode(char1);
+                        if(char2 >= 32) rxText.value += String.fromCharCode(char2);
                     }
-
-                    // Собираем буквы
-                    let char1 = parseInt(d_rx.slice(0,8).join(''), 2);
-                    let char2 = parseInt(d_rx.slice(8,16).join(''), 2);
-                    if(char1 >= 32) rxText.value += String.fromCharCode(char1);
-                    if(char2 >= 32) rxText.value += String.fromCharCode(char2);
 
                     waitRising = false;
                 } else if (bits[SYNC_CELL] === 0) {
                     waitRising = true;
                 }
             }
+            // Цикл теперь будет работать ВСЕГДА!
             requestAnimationFrame(loop);
         };
         loop();
