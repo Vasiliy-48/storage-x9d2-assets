@@ -3,78 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Modem v7.0 - Hamming FEC</title>
+    <title>Optical Modem v8.0 - ULTIMATE</title>
     <style>
         body { font-family: system-ui, sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
-        .card { max-width: 600px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
+        .card { max-width: 650px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
         
-        .tuning { background: #1a1a1a; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: left; border: 1px solid #333;}
-        .tuning label { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-top: 8px; }
-        input[type="range"] { width: 100%; margin-top: 5px; }
+        .tuning { background: #1a1a1a; padding: 12px; border-radius: 12px; margin-bottom: 10px; text-align: left; border: 1px solid #2a2a2a;}
+        .tuning label { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-top: 8px; font-weight: bold;}
+        input[type="range"] { width: 100%; margin-top: 5px; accent-color: #007aff;}
 
-        #txContainer { display: flex; justify-content: center; align-items: center; min-height: 320px; background: #050505; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222;}
+        /* Матрица 5x5 */
+        #txContainer { display: flex; justify-content: center; align-items: center; background: #050505; border-radius: 12px; margin-bottom: 10px; padding: 20px;}
         #transmitter { 
-            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-            width: 250px; height: 250px; gap: 15px; background: #000; padding: 15px; border-radius: 8px;
+            display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+            width: 280px; height: 280px; gap: 8px; background: #000; padding: 8px; border-radius: 8px;
         }
-        .cell { background: #000; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #222; font-weight: bold; font-size: 14px;}
-        #cell-4 { border: 2px solid #333; }
+        .cell { background: #000; border-radius: 4px; transition: background 0.05s; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #222;}
+        #cell-12 { border: 2px solid #0f0; background: #111; } /* ЦЕНТР - SYNC */
 
         textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 5px 0; background: #222; color: #fff; font-size: 16px; box-sizing: border-box;}
-        button { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; background: #007aff; color: #fff; }
+        button { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 14px; color: #fff; transition: 0.2s;}
+        button:active { transform: scale(0.98); }
+        .btn-blue { background: #007aff; } .btn-green { background: #34c759; } .btn-gray { background: #444; } .btn-orange { background: #ff9500; }
 
-        .video-wrap { position: relative; width: 300px; height: 300px; margin: 10px auto; border-radius: 16px; overflow: hidden; border: 2px solid #555; display: none; background: #000;}
+        /* Приемник */
+        .video-wrap { position: relative; width: 320px; height: 320px; margin: 10px auto; border-radius: 12px; overflow: hidden; border: 2px solid #555; display: none; background: #000;}
         video { width: 100%; height: 100%; object-fit: cover; }
         
         .target-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-        .dot { position: absolute; width: 16px; height: 16px; border: 2px solid red; border-radius: 50%; background: rgba(255,0,0,0.3); transform: translate(-50%, -50%); }
-        .dot.sync { border-color: #0f0; width: 22px; height: 22px; }
+        .dot { position: absolute; width: 10px; height: 10px; border: 2px solid red; border-radius: 50%; background: rgba(255,0,0,0.4); transform: translate(-50%, -50%); }
+        .dot.sync { border-color: #0f0; width: 16px; height: 16px; background: rgba(0,255,0,0.3);}
+        .dot.corner { border-color: #007aff; } /* Угловые для прицеливания */
 
-        #rxText { background: #000; color: #0f0; font-family: monospace; height: 80px; width: 100%; margin-top: 10px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; box-sizing: border-box;}
+        #rxText { background: #000; color: #0f0; font-family: monospace; height: 80px; width: 100%; margin-top: 5px; border-radius: 10px; padding: 10px; font-size: 16px; border: 1px solid #333; box-sizing: border-box;}
         
-        .monitor { display: grid; grid-template-columns: repeat(3, 15px); gap: 5px; justify-content: center; margin: 10px 0; }
-        .m-cell { width: 15px; height: 15px; border: 1px solid #444; background: #000; border-radius: 3px;}
+        .monitor { display: grid; grid-template-columns: repeat(5, 12px); gap: 3px; justify-content: center; margin: 10px 0; }
+        .m-cell { width: 12px; height: 12px; border: 1px solid #333; background: #000; border-radius: 2px;}
         
         .status-box { display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 5px; background: #222; padding: 8px; border-radius: 8px;}
-        .stat-healed { color: #34c759; font-weight: bold;}
-        .stat-fatal { color: #ff3b30; font-weight: bold;}
+        .stat-healed { color: #34c759; font-weight: bold;} .stat-fatal { color: #ff3b30; font-weight: bold;}
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div style="color: #007aff; font-size: 14px; font-weight: bold; margin-bottom: 5px;">v7.0: HAMMING(8,4) ERROR CORRECTION</div>
+    <div style="color: #007aff; font-size: 16px; font-weight: bold; margin-bottom: 10px;">ULTIMATE 5x5 (16 BIT/TICK)</div>
 
     <div class="tuning">
-        <label>Размер матрицы (TX): <span id="l-txSize">250px</span></label>
-        <input type="range" id="txSize" min="150" max="350" value="250" oninput="updateTx()">
-        <label>Толщина защиты (TX): <span id="l-txGap">15px</span></label>
-        <input type="range" id="txGap" min="2" max="40" value="15" oninput="updateTx()">
+        <strong style="color:#fff;">🛠 ПЕРЕДАТЧИК (TX)</strong>
+        <label>Скорость (Задержка кадра): <span id="l-txSpeed">400 ms</span></label>
+        <input type="range" id="txSpeed" min="150" max="800" value="400" oninput="updateTx()">
+        
+        <label>Масштаб Матрицы: <span id="l-txSize">280px</span></label>
+        <input type="range" id="txSize" min="150" max="350" value="280" oninput="updateTx()">
+        
+        <label>Толщина защиты (Gap): <span id="l-txGap">8px</span></label>
+        <input type="range" id="txGap" min="2" max="25" value="8" oninput="updateTx()">
     </div>
 
-    <textarea id="txText">HELLO DATA</textarea>
-    <button onclick="transmit()">ОТПРАВИТЬ С БРОНЕЙ ХЭММИНГА</button>
+    <textarea id="txText">HELLO WORLD! THIS IS 5x5 MATRIX.</textarea>
+    
+    <div style="display: flex; gap: 8px;">
+        <button class="btn-blue" style="flex: 2;" onclick="transmit(false)">ОТПРАВИТЬ ДАННЫЕ</button>
+        <button class="btn-orange" style="flex: 1;" onclick="transmit(true)">АВТОКАЛИБРОВКА ⚡</button>
+    </div>
     
     <div id="txContainer">
         <div id="transmitter">
-            <div id="cell-0" class="cell"></div><div id="cell-1" class="cell"></div><div id="cell-2" class="cell"></div>
-            <div id="cell-3" class="cell"></div><div id="cell-4" class="cell" style="color:#555">S</div><div id="cell-5" class="cell"></div>
-            <div id="cell-6" class="cell"></div><div id="cell-7" class="cell"></div><div id="cell-8" class="cell"></div>
+            <!-- 25 ячеек сгенерируются в JS -->
         </div>
     </div>
 
-    <hr style="border: 1px solid #222; margin: 20px 0;">
+    <hr style="border: 1px solid #222; margin: 15px 0;">
 
     <div class="tuning">
-        <label>Прицел (RX): <span id="l-rxScale">80px</span></label>
-        <input type="range" id="rxScale" min="30" max="130" value="80" oninput="updateRx()">
-        <label>Порог чувствительности (RX): <span id="l-rxThresh">130</span></label>
-        <input type="range" id="rxThresh" min="10" max="250" value="130" oninput="updateRx()">
+        <strong style="color:#fff;">🎯 ПРИЕМНИК (RX)</strong>
+        <label>Размах прицела: <span id="l-rxScale">50px</span></label>
+        <input type="range" id="rxScale" min="20" max="70" value="50" oninput="updateRx()">
+        
+        <label>Порог яркости (АВТО/Ручной): <span id="l-rxThresh" style="color:#0f0;">130</span></label>
+        <input type="range" id="rxThresh" min="10" max="250" value="130" oninput="manualThresh()">
     </div>
 
     <div style="display: flex; gap: 8px;">
-        <button style="background: #34c759; flex: 2;" onclick="initCamera()">ВКЛЮЧИТЬ СКАНЕР</button>
-        <button style="background: #444; flex: 1;" onclick="switchCamera()">КАМЕРА 🔄</button>
+        <button class="btn-green" style="flex: 2;" onclick="initCamera()">ВКЛЮЧИТЬ СКАНЕР</button>
+        <button class="btn-gray" style="flex: 1;" onclick="switchCamera()">КАМЕРА 🔄</button>
     </div>
     
     <div id="rxSection" style="display:none;">
@@ -84,125 +97,147 @@
         </div>
         
         <div class="monitor" id="monitor">
-            <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell"></div>
-            <div class="m-cell"></div><div class="m-cell" style="border-color:#0f0"></div><div class="m-cell"></div>
-            <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell"></div>
+            <!-- 25 мини-ячеек -->
         </div>
 
         <div class="status-box">
-            <span>Вылечено бликов: <span id="cHeal" class="stat-healed">0</span></span>
-            <span>Уничтожено бит: <span id="cFatal" class="stat-fatal">0</span></span>
+            <span>Спасенных бит: <span id="cHeal" class="stat-healed">0</span></span>
+            <span>Потеряно кадров: <span id="cFatal" class="stat-fatal">0</span></span>
         </div>
 
         <textarea id="rxText" readonly></textarea>
-        <button style="background:#333;" onclick="document.getElementById('rxText').value=''; healed=0; fatal=0; document.getElementById('cHeal').innerText='0'; document.getElementById('cFatal').innerText='0';">Очистить лог</button>
+        <button class="btn-gray" onclick="document.getElementById('rxText').value=''; healed=0; fatal=0; document.getElementById('cHeal').innerText='0'; document.getElementById('cFatal').innerText='0';">Очистить лог</button>
     </div>
 </div>
 
 <script>
-    const TICK_MS = 350; // Можно чуть ускорить, Хэмминг вытянет огрехи
+    let TICK_MS = 400; 
     let currentStream = null, camIndex = 0;
     let healed = 0, fatal = 0;
-    const SYNC_CELL = 4;
-    const DATA_CELLS =[0, 1, 2, 3, 5, 6, 7, 8];
+    let autoThreshActive = false;
+
+    // Инициализация HTML сетки 5x5
+    const txGrid = document.getElementById('transmitter');
+    const rxMonitor = document.getElementById('monitor');
+    for(let i=0; i<25; i++) {
+        let divTx = document.createElement('div');
+        divTx.id = `cell-${i}`; divTx.className = 'cell';
+        if(i===12) { divTx.innerText = 'S'; divTx.style.borderColor = '#0f0'; divTx.style.borderWidth = '2px'; divTx.style.borderStyle = 'solid'; }
+        txGrid.appendChild(divTx);
+
+        let divRx = document.createElement('div');
+        divRx.className = 'm-cell';
+        if(i===12) divRx.style.borderColor = '#0f0';
+        rxMonitor.appendChild(divRx);
+    }
+
+    const SYNC_CELL = 12; // Центр 5x5
+    const DATA_INDICES =[]; // Будет 24 ячейки (16 Data + 4 RowP + 4 ColP)
+    for(let i=0; i<25; i++) if(i !== SYNC_CELL) DATA_INDICES.push(i);
 
     function updateTx() {
+        TICK_MS = parseInt(document.getElementById('txSpeed').value);
+        document.getElementById('l-txSpeed').innerText = TICK_MS + " ms";
+        
         const size = document.getElementById('txSize').value;
         const gap = document.getElementById('txGap').value;
         document.getElementById('l-txSize').innerText = size + "px";
         document.getElementById('l-txGap').innerText = gap + "px";
-        const tx = document.getElementById('transmitter');
-        tx.style.width = size + "px"; tx.style.height = size + "px"; tx.style.gap = gap + "px"; tx.style.padding = gap + "px";
+        
+        txGrid.style.width = size + "px"; txGrid.style.height = size + "px"; 
+        txGrid.style.gap = gap + "px"; txGrid.style.padding = gap + "px";
     }
+
     function updateRx() {
         const scale = parseInt(document.getElementById('rxScale').value);
         document.getElementById('l-rxScale').innerText = scale + "px";
-        document.getElementById('l-rxThresh').innerText = document.getElementById('rxThresh').value;
+        
         const overlay = document.getElementById('overlay');
         overlay.innerHTML = '';
-        const coords = [-scale, 0, scale];
+        const coords =[-2*scale, -scale, 0, scale, 2*scale];
         for(let y of coords) {
             for(let x of coords) {
                 const dot = document.createElement('div');
-                dot.className = (x === 0 && y === 0) ? 'dot sync' : 'dot';
+                dot.className = 'dot';
+                if(x===0 && y===0) dot.className += ' sync';
+                // Угловые делаем синими для удобства
+                if((x===-2*scale || x===2*scale) && (y===-2*scale || y===2*scale)) dot.className += ' corner';
+                
                 dot.style.left = `calc(50% + ${x}px)`; dot.style.top = `calc(50% + ${y}px)`;
                 overlay.appendChild(dot);
             }
         }
     }
+    
+    function manualThresh() {
+        autoThreshActive = false;
+        document.getElementById('l-rxThresh').innerText = document.getElementById('rxThresh').value + " (Ручной)";
+        document.getElementById('l-rxThresh').style.color = "#aaa";
+    }
+
     updateTx(); updateRx();
 
-    // --- АЛГОРИТМ КОДИРОВАНИЯ ХЭММИНГА (8,4) ---
-    // Принимает 4 бита данных, возвращает 8 бит с броней
-    function encodeHamming(nibble) {
-        let d1 = (nibble >> 3) & 1, d2 = (nibble >> 2) & 1, d3 = (nibble >> 1) & 1, d4 = nibble & 1;
-        let p1 = d1 ^ d2 ^ d4;
-        let p2 = d1 ^ d3 ^ d4;
-        let p3 = d2 ^ d3 ^ d4;
-        let p4 = p1 ^ p2 ^ d1 ^ p3 ^ d2 ^ d3 ^ d4; // Общий бит четности
-        return[p1, p2, d1, p3, d2, d3, d4, p4];
+    // --- 2D PARITY ENCODING ---
+    // На вход 2 символа (16 бит). На выход 24 бита (16 data + 4 RowP + 4 ColP)
+    function encode2DParity(char1, char2) {
+        let d =[];
+        for(let j=7; j>=0; j--) d.push((char1 >> j) & 1);
+        for(let j=7; j>=0; j--) d.push((char2 >> j) & 1);
+        
+        let pr = [0,0,0,0], pc = [0,0,0,0];
+        for(let r=0; r<4; r++) {
+            for(let c=0; c<4; c++) {
+                let bit = d[r*4 + c];
+                pr[r] ^= bit;
+                pc[c] ^= bit;
+            }
+        }
+        return [...d, ...pr, ...pc];
     }
 
-    // --- ПЕРЕДАЧА ---
-    async function transmit() {
+    // --- TRANSMISSION ---
+    async function transmit(isCalibration) {
         const text = document.getElementById('txText').value;
-        const cells = Array.from({length: 9}, (_, i) => document.getElementById(`cell-${i}`));
+        const allCells = Array.from({length: 25}, (_, i) => document.getElementById(`cell-${i}`));
         
-        // Преамбула (Сброс приемника)
-        cells.forEach(c => c.style.background = "white"); await new Promise(r => setTimeout(r, 1000));
-        cells.forEach(c => c.style.background = "black"); await new Promise(r => setTimeout(r, 600));
-
-        for (let char of text) {
-            let code = char.charCodeAt(0) & 255;
-            let highNibble = (code >> 4) & 15; // Первые 4 бита
-            let lowNibble = code & 15;         // Вторые 4 бита
-
-            for (let nibble of [highNibble, lowNibble]) {
-                let hBits = encodeHamming(nibble);
-
-                // DATA OFF, SYNC OFF
-                cells[SYNC_CELL].style.background = "black";
-                hBits.forEach((bit, i) => cells[DATA_CELLS[i]].style.background = bit ? "white" : "black");
-                await new Promise(r => setTimeout(r, TICK_MS));
-
-                // SYNC ON (Считывание)
-                cells[SYNC_CELL].style.background = "white";
-                await new Promise(r => setTimeout(r, TICK_MS));
-            }
-        }
-        cells.forEach(c => c.style.background = "black");
-    }
-
-    // --- ПРИЕМ И РАСШИФРОВКА ХЭММИНГА ---
-    function decodeHamming(bits) {
-        let[p1, p2, d1, p3, d2, d3, d4, p4] = bits;
-        let s1 = p1 ^ d1 ^ d2 ^ d4;
-        let s2 = p2 ^ d1 ^ d3 ^ d4;
-        let s3 = p3 ^ d2 ^ d3 ^ d4;
-        
-        let S = (s3 << 2) | (s2 << 1) | s1; // Синдром ошибки
-        let overParity = bits.reduce((a, b) => a ^ b, 0);
-
-        let status = 'OK';
-
-        // Если есть ошибка
-        if (S !== 0) {
-            if (overParity === 1) {
-                // Одиночная ошибка (Засвет 1 ячейки). ИСПРАВЛЯЕМ!
-                bits[S - 1] ^= 1; 
-                status = 'HEALED';
-            } else {
-                // Двойная ошибка (2 ячейки умерли). Фатально.
-                return { data: null, status: 'FATAL' };
-            }
-        } else if (overParity === 1) {
-            status = 'HEALED'; // Повредился сам проверочный бит p4, данные целы
+        if(isCalibration) {
+            // Режим жесткой калибровки для приемника
+            allCells.forEach(c => c.style.background = "white");
+            await new Promise(r => setTimeout(r, 2000));
+            allCells.forEach(c => c.style.background = "black");
+            await new Promise(r => setTimeout(r, 1500));
+            return;
         }
 
-        let correctedData = (bits[2] << 3) | (bits[4] << 2) | (bits[5] << 1) | bits[6];
-        return { data: correctedData, status: status };
+        // Подготовка текста (четное количество)
+        let padText = text;
+        if(padText.length % 2 !== 0) padText += " "; 
+
+        // Преамбула начала
+        allCells.forEach(c => c.style.background = "white"); await new Promise(r => setTimeout(r, 600));
+        allCells.forEach(c => c.style.background = "black"); await new Promise(r => setTimeout(r, 400));
+
+        for (let i = 0; i < padText.length; i += 2) {
+            let c1 = padText.charCodeAt(i) & 255;
+            let c2 = padText.charCodeAt(i+1) & 255;
+            
+            let frame24 = encode2DParity(c1, c2);
+
+            // SYNC OFF, ВЫВОД ДАННЫХ
+            allCells[SYNC_CELL].style.background = "black";
+            for(let k=0; k<24; k++) {
+                allCells[DATA_INDICES[k]].style.background = frame24[k] ? "white" : "black";
+            }
+            await new Promise(r => setTimeout(r, TICK_MS));
+
+            // SYNC ON (Считывание)
+            allCells[SYNC_CELL].style.background = "white";
+            await new Promise(r => setTimeout(r, TICK_MS));
+        }
+        allCells.forEach(c => c.style.background = "black");
     }
 
+    // --- RECEIVER ---
     async function switchCamera() {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cams = devices.filter(d => d.kind === 'videoinput');
@@ -218,11 +253,9 @@
             document.getElementById('video').srcObject = currentStream;
             document.getElementById('video').play();
             document.getElementById('rxSection').style.display = 'block';
-            document.getElementById('vWrap').style.display = 'block'; // <-- ВЕРНУЛ ЭТУ СТРОКУ
+            document.getElementById('vWrap').style.display = 'block';
             decode();
-        } catch (e) { 
-            alert("Камера недоступна или заблокирована: " + e.message); 
-        }
+        } catch (e) { alert("Ошибка камеры"); }
     }
 
     function decode() {
@@ -233,8 +266,8 @@
         const mCells = document.getElementById('monitor').children;
         
         let waitRising = true;
-        let isHighNibble = true;
-        let highData = 0;
+        let rxState = "IDLE";
+        let calMax = 0, calMin = 255;
 
         const loop = () => {
             if (video.readyState === 4) {
@@ -242,51 +275,84 @@
                 const size = Math.min(video.videoWidth, video.videoHeight);
                 ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, 300, 300);
                 
-                const thresh = parseInt(document.getElementById('rxThresh').value);
                 const scale = parseInt(document.getElementById('rxScale').value);
                 
-                const getBit = (x, y) => {
+                // Получение яркости 3x3 пикселей
+                const getLum = (x, y) => {
                     const d = ctx.getImageData(x-1, y-1, 3, 3).data;
                     let sum = 0;
                     for(let i=0; i<d.length; i+=4) sum += (d[i]+d[i+1]+d[i+2])/3;
-                    return (sum/9) > thresh ? 1 : 0;
+                    return sum/9;
                 };
 
                 const center = 150;
-                const offsets = [-scale, 0, scale];
-                let bits =[];
-                for(let y of offsets) for(let x of offsets) bits.push(getBit(center + x, center + y));
+                const offsets =[-2*scale, -scale, 0, scale, 2*scale];
+                let lums =[];
+                for(let y of offsets) for(let x of offsets) lums.push(getLum(center + x, center + y));
 
+                // --- АВТОКАЛИБРОВКА ---
+                const lumS = lums[SYNC_CELL];
+                if(lums.every(l => l > 200)) {
+                    rxState = "CALIB"; calMax = 0; calMin = 255; autoThreshActive = true;
+                }
+                if(rxState === "CALIB") {
+                    if(lumS > calMax) calMax = lumS;
+                    if(lumS < calMin) calMin = lumS;
+                    if(lums.every(l => l < 60) && calMax > 150) {
+                        const newThresh = Math.round((calMax + calMin) / 2);
+                        document.getElementById('rxThresh').value = newThresh;
+                        document.getElementById('l-rxThresh').innerText = newThresh + " (АВТО)";
+                        document.getElementById('l-rxThresh').style.color = "#0f0";
+                        rxState = "READY";
+                    }
+                }
+
+                // --- РАСШИФРОВКА ---
+                const thresh = parseInt(document.getElementById('rxThresh').value);
+                const bits = lums.map(l => l > thresh ? 1 : 0);
+                
                 bits.forEach((b, i) => mCells[i].style.background = b ? "white" : "black");
 
-                const sBit = bits[SYNC_CELL];
+                if (waitRising && bits[SYNC_CELL] === 1) {
+                    // Извлекаем 24 бита (пропуская SYNC)
+                    let f =[];
+                    for(let i=0; i<25; i++) if(i !== SYNC_CELL) f.push(bits[i]);
+                    
+                    let d_rx = f.slice(0, 16);
+                    let pr_rx = f.slice(16, 20);
+                    let pc_rx = f.slice(20, 24);
 
-                if (waitRising && sBit === 1) {
-                    const dataBits = DATA_CELLS.map(i => bits[i]); // 8 бит для Хэмминга
-                    const result = decodeHamming(dataBits);
+                    // 2D Parity Check
+                    let errR = [], errC =[];
+                    for(let r=0; r<4; r++) {
+                        let cP = d_rx[r*4]^d_rx[r*4+1]^d_rx[r*4+2]^d_rx[r*4+3];
+                        if(cP !== pr_rx[r]) errR.push(r);
+                    }
+                    for(let c=0; c<4; c++) {
+                        let cC = d_rx[c]^d_rx[c+4]^d_rx[c+8]^d_rx[c+12];
+                        if(cC !== pc_rx[c]) errC.push(c);
+                    }
 
-                    if (result.status === 'HEALED') {
+                    if(errR.length === 1 && errC.length === 1) {
+                        // Одиночная ошибка - ЛЕЧИМ!
+                        d_rx[errR[0]*4 + errC[0]] ^= 1;
                         healed++; document.getElementById('cHeal').innerText = healed;
-                    } else if (result.status === 'FATAL') {
+                    } else if (errR.length > 0 || errC.length > 0) {
+                        // Невосстановимо
                         fatal++; document.getElementById('cFatal').innerText = fatal;
+                        rxText.value += "░░"; // 2 байта потеряны
+                        waitRising = false;
+                        return;
                     }
 
-                    if (result.status !== 'FATAL') {
-                        if (isHighNibble) {
-                            highData = result.data;
-                            isHighNibble = false;
-                        } else {
-                            let charCode = (highData << 4) | result.data;
-                            rxText.value += String.fromCharCode(charCode);
-                            isHighNibble = true;
-                        }
-                    } else {
-                        // Если фатально - печатаем блок и сбрасываем счетчик байта
-                        rxText.value += "░";
-                        isHighNibble = true; 
-                    }
+                    // Собираем буквы
+                    let char1 = parseInt(d_rx.slice(0,8).join(''), 2);
+                    let char2 = parseInt(d_rx.slice(8,16).join(''), 2);
+                    if(char1 >= 32) rxText.value += String.fromCharCode(char1);
+                    if(char2 >= 32) rxText.value += String.fromCharCode(char2);
+
                     waitRising = false;
-                } else if (sBit === 0) {
+                } else if (bits[SYNC_CELL] === 0) {
                     waitRising = true;
                 }
             }
