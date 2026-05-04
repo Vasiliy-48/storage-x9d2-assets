@@ -3,17 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Optical Modem v6.0 - PRO Tuning</title>
+    <title>Optical Modem v7.0 - Hamming FEC</title>
     <style>
         body { font-family: system-ui, sans-serif; margin: 0; padding: 10px; background: #000; color: #fff; text-align: center; }
         .card { max-width: 600px; margin: 0 auto; background: #111; padding: 15px; border-radius: 20px; border: 1px solid #333; }
         
-        /* Тюнинг-панель */
         .tuning { background: #1a1a1a; padding: 10px; border-radius: 12px; margin-bottom: 15px; text-align: left; border: 1px solid #333;}
         .tuning label { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-top: 8px; }
         input[type="range"] { width: 100%; margin-top: 5px; }
 
-        /* Передатчик */
         #txContainer { display: flex; justify-content: center; align-items: center; min-height: 320px; background: #050505; border-radius: 12px; margin-bottom: 10px; border: 1px solid #222;}
         #transmitter { 
             display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
@@ -24,14 +22,8 @@
 
         textarea { width: 100%; height: 60px; border-radius: 10px; padding: 10px; border: none; margin: 5px 0; background: #222; color: #fff; font-size: 16px; box-sizing: border-box;}
         button { width: 100%; padding: 15px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; margin: 5px 0; font-size: 16px; background: #007aff; color: #fff; }
-        .btn-green { background: #34c759; }
-        .btn-gray { background: #444; }
 
-        /* Приемник (Квадрат 300x300) */
-        .video-wrap { 
-            position: relative; width: 300px; height: 300px; margin: 10px auto; 
-            border-radius: 16px; overflow: hidden; border: 2px solid #555; display: none; background: #000;
-        }
+        .video-wrap { position: relative; width: 300px; height: 300px; margin: 10px auto; border-radius: 16px; overflow: hidden; border: 2px solid #555; display: none; background: #000;}
         video { width: 100%; height: 100%; object-fit: cover; }
         
         .target-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
@@ -39,102 +31,93 @@
         .dot.sync { border-color: #0f0; width: 22px; height: 22px; }
 
         #rxText { background: #000; color: #0f0; font-family: monospace; height: 80px; width: 100%; margin-top: 10px; border-radius: 10px; padding: 10px; font-size: 18px; border: 1px solid #333; box-sizing: border-box;}
+        
         .monitor { display: grid; grid-template-columns: repeat(3, 15px); gap: 5px; justify-content: center; margin: 10px 0; }
         .m-cell { width: 15px; height: 15px; border: 1px solid #444; background: #000; border-radius: 3px;}
+        
+        .status-box { display: flex; justify-content: space-around; font-size: 12px; margin-bottom: 5px; background: #222; padding: 8px; border-radius: 8px;}
+        .stat-healed { color: #34c759; font-weight: bold;}
+        .stat-fatal { color: #ff3b30; font-weight: bold;}
     </style>
 </head>
 <body>
 
 <div class="card">
-    <div id="status" style="color: #007aff; font-size: 14px; font-weight: bold;">v6.0 PRO: ADJUSTABLE GRID</div>
+    <div style="color: #007aff; font-size: 14px; font-weight: bold; margin-bottom: 5px;">v7.0: HAMMING(8,4) ERROR CORRECTION</div>
 
-    <!-- Тюнинг Передатчика -->
     <div class="tuning">
-        <strong style="font-size:14px;">🛠 Настройки Передатчика (TX)</strong>
-        <label>Размер матрицы: <span id="l-txSize">250px</span></label>
+        <label>Размер матрицы (TX): <span id="l-txSize">250px</span></label>
         <input type="range" id="txSize" min="150" max="350" value="250" oninput="updateTx()">
-        <label>Защита от засветов (Толщина границ): <span id="l-txGap">15px</span></label>
+        <label>Толщина защиты (TX): <span id="l-txGap">15px</span></label>
         <input type="range" id="txGap" min="2" max="40" value="15" oninput="updateTx()">
     </div>
 
-    <textarea id="txText">HELLO</textarea>
-    <button onclick="transmit()">ОТПРАВИТЬ ДАННЫЕ</button>
+    <textarea id="txText">HELLO DATA</textarea>
+    <button onclick="transmit()">ОТПРАВИТЬ С БРОНЕЙ ХЭММИНГА</button>
     
     <div id="txContainer">
         <div id="transmitter">
-            <div id="cell-0" class="cell">0</div><div id="cell-1" class="cell">1</div><div id="cell-2" class="cell">2</div>
-            <div id="cell-3" class="cell">3</div><div id="cell-4" class="cell" style="color:#555">S</div><div id="cell-5" class="cell">5</div>
-            <div id="cell-6" class="cell">6</div><div id="cell-7" class="cell">7</div><div id="cell-8" class="cell" style="color:#00ffff">P</div>
+            <div id="cell-0" class="cell"></div><div id="cell-1" class="cell"></div><div id="cell-2" class="cell"></div>
+            <div id="cell-3" class="cell"></div><div id="cell-4" class="cell" style="color:#555">S</div><div id="cell-5" class="cell"></div>
+            <div id="cell-6" class="cell"></div><div id="cell-7" class="cell"></div><div id="cell-8" class="cell"></div>
         </div>
     </div>
 
     <hr style="border: 1px solid #222; margin: 20px 0;">
 
-    <!-- Тюнинг Приемника -->
     <div class="tuning">
-        <strong style="font-size:14px;">🎯 Настройки Приемника (RX)</strong>
-        <label>Масштаб прицела (Раздвинуть точки): <span id="l-rxScale">80px</span></label>
+        <label>Прицел (RX): <span id="l-rxScale">80px</span></label>
         <input type="range" id="rxScale" min="30" max="130" value="80" oninput="updateRx()">
-        <label>Порог яркости (Чувствительность): <span id="l-rxThresh">130</span></label>
+        <label>Порог чувствительности (RX): <span id="l-rxThresh">130</span></label>
         <input type="range" id="rxThresh" min="10" max="250" value="130" oninput="updateRx()">
     </div>
 
     <div style="display: flex; gap: 8px;">
-        <button class="btn-green" style="flex: 2;" onclick="initCamera()">ВКЛЮЧИТЬ СКАНЕР</button>
-        <button class="btn-gray" style="flex: 1;" onclick="switchCamera()">КАМЕРА 🔄</button>
+        <button style="background: #34c759; flex: 2;" onclick="initCamera()">ВКЛЮЧИТЬ СКАНЕР</button>
+        <button style="background: #444; flex: 1;" onclick="switchCamera()">КАМЕРА 🔄</button>
     </div>
     
     <div id="rxSection" style="display:none;">
         <div class="video-wrap" id="vWrap">
             <video id="video" playsinline></video>
-            <div class="target-overlay" id="overlay">
-                <!-- Точки генерируются в JS -->
-            </div>
+            <div class="target-overlay" id="overlay"></div>
         </div>
         
         <div class="monitor" id="monitor">
             <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell"></div>
             <div class="m-cell"></div><div class="m-cell" style="border-color:#0f0"></div><div class="m-cell"></div>
-            <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell" style="border-color:#0ff"></div>
+            <div class="m-cell"></div><div class="m-cell"></div><div class="m-cell"></div>
         </div>
 
-        <div style="font-size: 12px; color: #ff3b30; margin-bottom: 5px; font-weight: bold;">
-            Ошибок (Битые байты): <span id="errCount">0</span>
+        <div class="status-box">
+            <span>Вылечено бликов: <span id="cHeal" class="stat-healed">0</span></span>
+            <span>Уничтожено бит: <span id="cFatal" class="stat-fatal">0</span></span>
         </div>
+
         <textarea id="rxText" readonly></textarea>
-        <button class="btn-gray" onclick="document.getElementById('rxText').value=''; errors=0; document.getElementById('errCount').innerText='0';">Очистить</button>
+        <button style="background:#333;" onclick="document.getElementById('rxText').value=''; healed=0; fatal=0; document.getElementById('cHeal').innerText='0'; document.getElementById('cFatal').innerText='0';">Очистить лог</button>
     </div>
 </div>
 
 <script>
-    const TICK_MS = 450; 
-    let camIndex = 0;
-    let currentStream = null;
-    let errors = 0;
-
-    const DATA_CELLS =[0, 1, 2, 3, 5, 6, 7];
-    const PARITY_CELL = 8;
+    const TICK_MS = 350; // Можно чуть ускорить, Хэмминг вытянет огрехи
+    let currentStream = null, camIndex = 0;
+    let healed = 0, fatal = 0;
     const SYNC_CELL = 4;
+    const DATA_CELLS =[0, 1, 2, 3, 5, 6, 7, 8];
 
-    // --- ОБНОВЛЕНИЕ UI ---
     function updateTx() {
         const size = document.getElementById('txSize').value;
         const gap = document.getElementById('txGap').value;
         document.getElementById('l-txSize').innerText = size + "px";
         document.getElementById('l-txGap').innerText = gap + "px";
         const tx = document.getElementById('transmitter');
-        tx.style.width = size + "px";
-        tx.style.height = size + "px";
-        tx.style.gap = gap + "px";
-        tx.style.padding = gap + "px";
+        tx.style.width = size + "px"; tx.style.height = size + "px"; tx.style.gap = gap + "px"; tx.style.padding = gap + "px";
     }
-
     function updateRx() {
         const scale = parseInt(document.getElementById('rxScale').value);
         document.getElementById('l-rxScale').innerText = scale + "px";
         document.getElementById('l-rxThresh').innerText = document.getElementById('rxThresh').value;
-        
-        // Перерисовываем точки прицела
         const overlay = document.getElementById('overlay');
         overlay.innerHTML = '';
         const coords = [-scale, 0, scale];
@@ -142,46 +125,84 @@
             for(let x of coords) {
                 const dot = document.createElement('div');
                 dot.className = (x === 0 && y === 0) ? 'dot sync' : 'dot';
-                dot.style.left = `calc(50% + ${x}px)`;
-                dot.style.top = `calc(50% + ${y}px)`;
+                dot.style.left = `calc(50% + ${x}px)`; dot.style.top = `calc(50% + ${y}px)`;
                 overlay.appendChild(dot);
             }
         }
     }
-    
-    // Инициализация при загрузке
     updateTx(); updateRx();
+
+    // --- АЛГОРИТМ КОДИРОВАНИЯ ХЭММИНГА (8,4) ---
+    // Принимает 4 бита данных, возвращает 8 бит с броней
+    function encodeHamming(nibble) {
+        let d1 = (nibble >> 3) & 1, d2 = (nibble >> 2) & 1, d3 = (nibble >> 1) & 1, d4 = nibble & 1;
+        let p1 = d1 ^ d2 ^ d4;
+        let p2 = d1 ^ d3 ^ d4;
+        let p3 = d2 ^ d3 ^ d4;
+        let p4 = p1 ^ p2 ^ d1 ^ p3 ^ d2 ^ d3 ^ d4; // Общий бит четности
+        return[p1, p2, d1, p3, d2, d3, d4, p4];
+    }
 
     // --- ПЕРЕДАЧА ---
     async function transmit() {
         const text = document.getElementById('txText').value;
-        const allCells = Array.from({length: 9}, (_, i) => document.getElementById(`cell-${i}`));
+        const cells = Array.from({length: 9}, (_, i) => document.getElementById(`cell-${i}`));
         
-        // Преамбула
-        allCells.forEach(c => c.style.background = "white");
-        await new Promise(r => setTimeout(r, 1200));
-        allCells.forEach(c => c.style.background = "black");
-        await new Promise(r => setTimeout(r, 800));
+        // Преамбула (Сброс приемника)
+        cells.forEach(c => c.style.background = "white"); await new Promise(r => setTimeout(r, 1000));
+        cells.forEach(c => c.style.background = "black"); await new Promise(r => setTimeout(r, 600));
 
         for (let char of text) {
-            let code = char.charCodeAt(0) & 127;
-            let bits = code.toString(2).padStart(7, '0').split('').map(Number);
-            let parity = bits.reduce((a, b) => a ^ b, 0);
+            let code = char.charCodeAt(0) & 255;
+            let highNibble = (code >> 4) & 15; // Первые 4 бита
+            let lowNibble = code & 15;         // Вторые 4 бита
 
-            // Данные
-            allCells[SYNC_CELL].style.background = "black";
-            bits.forEach((bit, i) => allCells[DATA_CELLS[i]].style.background = bit ? "white" : "black");
-            allCells[PARITY_CELL].style.background = parity ? "white" : "black";
-            await new Promise(r => setTimeout(r, TICK_MS));
+            for (let nibble of [highNibble, lowNibble]) {
+                let hBits = encodeHamming(nibble);
 
-            // Синхронизация (Считывание)
-            allCells[SYNC_CELL].style.background = "white";
-            await new Promise(r => setTimeout(r, TICK_MS));
+                // DATA OFF, SYNC OFF
+                cells[SYNC_CELL].style.background = "black";
+                hBits.forEach((bit, i) => cells[DATA_CELLS[i]].style.background = bit ? "white" : "black");
+                await new Promise(r => setTimeout(r, TICK_MS));
+
+                // SYNC ON (Считывание)
+                cells[SYNC_CELL].style.background = "white";
+                await new Promise(r => setTimeout(r, TICK_MS));
+            }
         }
-        allCells.forEach(c => c.style.background = "black");
+        cells.forEach(c => c.style.background = "black");
     }
 
-    // --- КАМЕРА И ПРИЕМ ---
+    // --- ПРИЕМ И РАСШИФРОВКА ХЭММИНГА ---
+    function decodeHamming(bits) {
+        let[p1, p2, d1, p3, d2, d3, d4, p4] = bits;
+        let s1 = p1 ^ d1 ^ d2 ^ d4;
+        let s2 = p2 ^ d1 ^ d3 ^ d4;
+        let s3 = p3 ^ d2 ^ d3 ^ d4;
+        
+        let S = (s3 << 2) | (s2 << 1) | s1; // Синдром ошибки
+        let overParity = bits.reduce((a, b) => a ^ b, 0);
+
+        let status = 'OK';
+
+        // Если есть ошибка
+        if (S !== 0) {
+            if (overParity === 1) {
+                // Одиночная ошибка (Засвет 1 ячейки). ИСПРАВЛЯЕМ!
+                bits[S - 1] ^= 1; 
+                status = 'HEALED';
+            } else {
+                // Двойная ошибка (2 ячейки умерли). Фатально.
+                return { data: null, status: 'FATAL' };
+            }
+        } else if (overParity === 1) {
+            status = 'HEALED'; // Повредился сам проверочный бит p4, данные целы
+        }
+
+        let correctedData = (bits[2] << 3) | (bits[4] << 2) | (bits[5] << 1) | bits[6];
+        return { data: correctedData, status: status };
+    }
+
     async function switchCamera() {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cams = devices.filter(d => d.kind === 'videoinput');
@@ -197,7 +218,6 @@
             document.getElementById('video').srcObject = currentStream;
             document.getElementById('video').play();
             document.getElementById('rxSection').style.display = 'block';
-            document.getElementById('vWrap').style.display = 'block';
             decode();
         } catch (e) { alert("Камера недоступна"); }
     }
@@ -207,60 +227,60 @@
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const rxText = document.getElementById('rxText');
-        const errDisp = document.getElementById('errCount');
         const mCells = document.getElementById('monitor').children;
         
         let waitRising = true;
+        let isHighNibble = true;
+        let highData = 0;
 
         const loop = () => {
             if (video.readyState === 4) {
-                // Холст жестко 300x300, как и окно просмотра
                 canvas.width = 300; canvas.height = 300;
-                
-                // Вырезаем ровный квадрат из центра видеопотока
                 const size = Math.min(video.videoWidth, video.videoHeight);
-                const startX = (video.videoWidth - size) / 2;
-                const startY = (video.videoHeight - size) / 2;
-                ctx.drawImage(video, startX, startY, size, size, 0, 0, 300, 300);
+                ctx.drawImage(video, (video.videoWidth - size) / 2, (video.videoHeight - size) / 2, size, size, 0, 0, 300, 300);
                 
                 const thresh = parseInt(document.getElementById('rxThresh').value);
                 const scale = parseInt(document.getElementById('rxScale').value);
                 
-                // Функция считывания пикселя в координатах (x, y)
                 const getBit = (x, y) => {
-                    // Берем не 1 пиксель, а усредняем область 3x3 для надежности
                     const d = ctx.getImageData(x-1, y-1, 3, 3).data;
                     let sum = 0;
                     for(let i=0; i<d.length; i+=4) sum += (d[i]+d[i+1]+d[i+2])/3;
                     return (sum/9) > thresh ? 1 : 0;
                 };
 
-                // Координаты выборки от центра (150, 150)
                 const center = 150;
                 const offsets = [-scale, 0, scale];
                 let bits =[];
-                for(let dy of offsets) {
-                    for(let dx of offsets) {
-                        bits.push(getBit(center + dx, center + dy));
-                    }
-                }
+                for(let y of offsets) for(let x of offsets) bits.push(getBit(center + x, center + y));
 
-                // Обновляем мониторчик
                 bits.forEach((b, i) => mCells[i].style.background = b ? "white" : "black");
 
                 const sBit = bits[SYNC_CELL];
 
                 if (waitRising && sBit === 1) {
-                    const dataBits = DATA_CELLS.map(i => bits[i]);
-                    const parityRec = bits[PARITY_CELL];
-                    const parityCalc = dataBits.reduce((a, b) => a ^ b, 0);
+                    const dataBits = DATA_CELLS.map(i => bits[i]); // 8 бит для Хэмминга
+                    const result = decodeHamming(dataBits);
 
-                    if (parityCalc === parityRec) {
-                        const code = parseInt(dataBits.join(''), 2);
-                        if (code >= 32) rxText.value += String.fromCharCode(code);
+                    if (result.status === 'HEALED') {
+                        healed++; document.getElementById('cHeal').innerText = healed;
+                    } else if (result.status === 'FATAL') {
+                        fatal++; document.getElementById('cFatal').innerText = fatal;
+                    }
+
+                    if (result.status !== 'FATAL') {
+                        if (isHighNibble) {
+                            highData = result.data;
+                            isHighNibble = false;
+                        } else {
+                            let charCode = (highData << 4) | result.data;
+                            rxText.value += String.fromCharCode(charCode);
+                            isHighNibble = true;
+                        }
                     } else {
-                        errors++; errDisp.innerText = errors;
+                        // Если фатально - печатаем блок и сбрасываем счетчик байта
                         rxText.value += "░";
+                        isHighNibble = true; 
                     }
                     waitRising = false;
                 } else if (sBit === 0) {
