@@ -218,8 +218,11 @@
             document.getElementById('video').srcObject = currentStream;
             document.getElementById('video').play();
             document.getElementById('rxSection').style.display = 'block';
+            document.getElementById('vWrap').style.display = 'block'; // <-- ВЕРНУЛ ЭТУ СТРОКУ
             decode();
-        } catch (e) { alert("Камера недоступна"); }
+        } catch (e) { 
+            alert("Камера недоступна или заблокирована: " + e.message); 
+        }
     }
 
     function decode() {
