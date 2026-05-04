@@ -195,13 +195,13 @@
         return [...d, ...pr, ...pc];
     }
 
-    // --- TRANSMISSION ---
+// --- TRANSMISSION ---
     async function transmit(isCalibration) {
         const text = document.getElementById('txText').value;
         const allCells = Array.from({length: 25}, (_, i) => document.getElementById(`cell-${i}`));
         
         if(isCalibration) {
-            // Режим жесткой калибровки для приемника
+            // Режим жесткой калибровки для приемника (Вспышка только тут!)
             allCells.forEach(c => c.style.background = "white");
             await new Promise(r => setTimeout(r, 2000));
             allCells.forEach(c => c.style.background = "black");
@@ -209,13 +209,14 @@
             return;
         }
 
-        // Подготовка текста (четное количество)
+        // Подготовка текста (дополняем пробелом, если букв нечетное количество)
         let padText = text;
         if(padText.length % 2 !== 0) padText += " "; 
 
-        // Преамбула начала
-        allCells.forEach(c => c.style.background = "white"); await new Promise(r => setTimeout(r, 600));
-        allCells.forEach(c => c.style.background = "black"); await new Promise(r => setTimeout(r, 400));
+        // МЯГКАЯ ПРЕАМБУЛА: Просто черный экран на полсекунды.
+        // Он сбрасывает триггеры приемника, но НЕ ослепляет камеру!
+        allCells.forEach(c => c.style.background = "black"); 
+        await new Promise(r => setTimeout(r, 600));
 
         for (let i = 0; i < padText.length; i += 2) {
             let c1 = padText.charCodeAt(i) & 255;
@@ -230,10 +231,12 @@
             }
             await new Promise(r => setTimeout(r, TICK_MS));
 
-            // SYNC ON (Считывание)
+            // SYNC ON (Сигнал для считывания кадра)
             allCells[SYNC_CELL].style.background = "white";
             await new Promise(r => setTimeout(r, TICK_MS));
         }
+        
+        // Конец передачи
         allCells.forEach(c => c.style.background = "black");
     }
 
